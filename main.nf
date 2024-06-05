@@ -58,7 +58,8 @@ workflow NFCORE_LARRY {
     )
 
     emit:
-    multiqc_report = LARRY.out.multiqc_report // channel: /path/to/multiqc_report.html
+    cutadapt_ra_reads = LARRY.out.cutadapt_ra
+    //multiqc_report = LARRY.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }
 /*
@@ -87,9 +88,13 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
+
     NFCORE_LARRY (
         PIPELINE_INITIALISATION.out.samplesheet
     )
+
+    /*
+
 
     //
     // SUBWORKFLOW: Run completion tasks
@@ -103,6 +108,9 @@ workflow {
         params.hook_url,
         NFCORE_LARRY.out.multiqc_report
     )
+
+    */
+
 }
 
 /*

@@ -1,0 +1,3 @@
+sample,fastq_1,fastq_2
+BOE5255A16,/camp/stp/sequencing/inputs/instruments/fastq/231220_A01366_0498_BH2CWNDSXC/fastq/PM22284/BOE5255A16_S171_L003_R2_001.fastq.gz,/camp/stp/sequencing/inputs/instruments/fastq/231220_A01366_0498_BH2CWNDSXC/fastq/PM22284/BOE5255A16_S171_L003_R1_001.fastq.gz
+BOE5255A17,/camp/stp/sequencing/inputs/instruments/fastq/231220_A01366_0498_BH2CWNDSXC/fastq/PM22284/BOE5255A17_S172_L003_R2_001.fastq.gz,/camp/stp/sequencing/inputs/instruments/fastq/231220_A01366_0498_BH2CWNDSXC/fastq/PM22284/BOE5255A17_S172_L003_R1_001.fastq.gz

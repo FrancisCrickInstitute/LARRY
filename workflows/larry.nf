@@ -4,12 +4,17 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-validation'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_larry_pipeline'
+include { FASTQC                             } from '../modules/nf-core/fastqc/main'
+include { MULTIQC                            } from '../modules/nf-core/multiqc/main'
+include { CUTADAPT as CUTADAPT_remove_adapt  } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_valid_larry   } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_cut_umi       } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_len_filter    } from '../modules/nf-core/cutadapt/main'
+include { UMITOOLS_EXTRACT } from '../modules/nf-core/umitools/extract/main'
+include { paramsSummaryMap                   } from 'plugin/nf-validation'
+include { paramsSummaryMultiqc               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML             } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText             } from '../subworkflows/local/utils_nfcore_larry_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,11 +32,95 @@ workflow LARRY {
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
+
+
+    //
+    //Module concatenate
+    //
+
+    /*
+    CONCAT_FASTQ(
+        CONCAT_FASTQ
+    )
+    */
+
+    //
+    //Module cutadapt
+    //
+
+    CUTADAPT_remove_adapt(
+        ch_samplesheet
+    )
+
+    
+
+    CUTADAPT_valid_larry(
+        CUTADAPT_remove_adapt.out.reads
+    )
+
+    
+
+    Channel
+        CUTADAPT_valid_larry.out.reads
+                            .map{ reads ->
+                            def meta = reads[0]
+                            meta.single_end = true
+
+                            def secondRead = reads[1][1]
+
+                            return new Tuple(meta,secondRead)
+
+                            }
+                            .set{CUTADAPT_cut_umi_input}
+
+
+    Channel
+        CUTADAPT_valid_larry.out.reads
+                            .map{ reads ->
+                            def meta = reads[0]
+
+                            def firstRead = reads[1][0]
+
+                            [["id" : meta.id , "read" : firstRead]]
+                            }
+                            .collect()
+                            .collectEntries(){item ->
+                                            [(item.id): item.read]
+                            }
+                            .set{firstRead}
+    
+    CUTADAPT_cut_umi(
+        CUTADAPT_cut_umi_input
+    )
+
+    Channel
+        CUTADAPT_cut_umi.out.reads
+                        .map{ reads ->
+                        def meta = reads[0]
+                        meta.single_end = false
+
+                        def shortRead = reads[1]
+
+                        def first_read_el = firstRead[meta.id].value
+
+                        updatedReads = [first_read_el , shortRead]
+
+                        return new Tuple(meta,updatedReads)
+
+                        }
+                        .set{CUTADAPT_len_filter_input}
+
+    CUTADAPT_len_filter(
+        CUTADAPT_len_filter_input
+    )
+                        
+
+    /*
     //
     // MODULE: Run FastQC
     //
     FASTQC (
-        ch_samplesheet
+        CUTADAPT_cut_umi.out.reads
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
@@ -86,10 +175,16 @@ workflow LARRY {
         ch_multiqc_logo.toList()
     )
 
+    */
+
     emit:
-    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    cutadapt_ra = CUTADAPT_len_filter.out.reads
+    //multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
+
 }
+
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
