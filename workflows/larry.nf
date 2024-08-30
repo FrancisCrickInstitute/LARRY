@@ -6,11 +6,23 @@
 
 include { FASTQC                             } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                            } from '../modules/nf-core/multiqc/main'
+include { CELLRANGER_COUNT } from '../modules/nf-core/cellranger/count/main'
+include { SAMTOOLS_VIEW as SAMTOOLS_VIEW_unmapped} from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_VIEW as SAMTOOLS_VIEW_larry} from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_MERGE } from '../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_SORT } from '../modules/nf-core/samtools/sort/main'
+include { BAMTOFASTQ10X } from '../modules/nf-core/bamtofastq10x/main'
+include { CAT_FASTQ as CAT_FASTQ_1} from '../modules/nf-core/cat/fastq/main'
 include { CUTADAPT as CUTADAPT_remove_adapt  } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_valid_larry   } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_cut_umi       } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_len_filter    } from '../modules/nf-core/cutadapt/main'
-include { UMITOOLS_EXTRACT } from '../modules/nf-core/umitools/extract/main'
+include { GUNZIP                   } from '../modules/nf-core/gunzip/main'
+include { CAT_CAT } from '../modules/nf-core/cat/cat/main'
+include { UNIQUE } from '../modules/local/unique/main'
+include { UMITOOLS_EXTRACT                   } from '../modules/nf-core/umitools/extract/main'
+include { CAT_FASTQ as CAT_FASTQ_2} from '../modules/nf-core/cat/fastq/main'
+include { GATHER_BARCODE                   } from '../modules/local/gather_barcode/main'
 include { paramsSummaryMap                   } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML             } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -32,95 +44,309 @@ workflow LARRY {
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
+    //
+    //Filter 10x data
+    //
 
+
+    ch_samplesheet
+        .filter { it[0].id.contains('GEX') }
+        .set{ch_samplesheet_gex}
+
+
+    //
+    //Module cellranger count
+    //
+
+    CELLRANGER_COUNT(ch_samplesheet_gex , params.cellranger_reference)
+
+    //
+    //Extract BAM files
+    //
+
+    CELLRANGER_COUNT.out.outs
+                    .map{meta , fles -> tuple(meta , fles[-7] , fles[-6])}
+                    .set{bam_files}
+
+    //
+    //Module samtool views for unmapped reads
+    //
+
+    SAMTOOLS_VIEW_unmapped(bam_files , tuple([:] , []) , [])
+
+    
+    //
+    //Module samtool views for LARRY reads
+    //
+
+    SAMTOOLS_VIEW_larry(bam_files , tuple([:] , []) , [])
+
+    //
+    //Prepare bamfiles to merge
+    //
+
+    SAMTOOLS_VIEW_unmapped.out.bam
+                        .concat(SAMTOOLS_VIEW_larry.out.bam)
+                        .map{ meta, fastq -> tuple( meta.id[0..-3], fastq )}
+                        .groupTuple()
+                        .map{ meta, fastq -> tuple( [id : meta , single_end : false], fastq.flatten() )}
+                        .set{bam_file_tomerge}
+
+    //
+    //Module samtool merge
+    //
+
+    SAMTOOLS_MERGE(bam_file_tomerge , tuple([:] , []) , tuple([:] , []))
+
+    //
+    //Module samtool sort
+    //
+
+    SAMTOOLS_SORT(SAMTOOLS_MERGE.out.bam , tuple([:] , []))
+
+    //
+    //Module BAMTOFASTQ10X 
+    //
+
+    BAMTOFASTQ10X(SAMTOOLS_SORT.out.bam)
+
+
+    //
+    //Combine LARRY and 10x data again
+    //
+
+    ch_samplesheet.filter { it[0].id.contains('LARRY')}
+                    .map{ meta, fastq -> tuple( meta.id[0..-3], fastq )}
+                    .groupTuple()
+                    .map{ meta, fastq -> tuple( [id : meta , single_end : false], fastq.flatten() )}
+                    .concat(BAMTOFASTQ10X.out.fastq)
+                    .set{gex_larry_together}
 
     //
     //Module concatenate
     //
 
-    /*
-    CONCAT_FASTQ(
-        CONCAT_FASTQ
-    )
-    */
-
-    //
-    //Module cutadapt
-    //
-
-    CUTADAPT_remove_adapt(
-        ch_samplesheet
+    CAT_FASTQ_1(
+        gex_larry_together
     )
 
     
+    //
+    //Reverse R1 and R2 order
+    //
+
+
+    CAT_FASTQ_1.out.reads
+                .map{ meta, fastq -> tuple(meta , [fastq[1] , fastq[0]])}
+                .set{gex_larry_together_reverse}
+
+
+    //
+    //Module cutadapt remove adapter
+    //
+
+    CUTADAPT_remove_adapt(
+        gex_larry_together_reverse
+    )
+
+    
+    //
+    //Module cutadapt check valed larry
+    //
 
     CUTADAPT_valid_larry(
         CUTADAPT_remove_adapt.out.reads
     )
 
     
+    //
+    //Convert to a single-end data with only the cell and umi barcode.
+    //
 
-    Channel
-        CUTADAPT_valid_larry.out.reads
-                            .map{ reads ->
-                            def meta = reads[0]
-                            meta.single_end = true
+    CUTADAPT_valid_larry.out.reads
+                        .map{ meta, fastq -> 
+                            meta.single_end  = true
+                            return tuple(meta , fastq[1])}
+                        .set{CUTADAPT_cut_umi_input}
 
-                            def secondRead = reads[1][1]
+    //
+    //Link sample identity to the LARRY barcode
+    //
 
-                            return new Tuple(meta,secondRead)
-
-                            }
-                            .set{CUTADAPT_cut_umi_input}
-
-
-    Channel
-        CUTADAPT_valid_larry.out.reads
-                            .map{ reads ->
-                            def meta = reads[0]
-
-                            def firstRead = reads[1][0]
-
-                            [["id" : meta.id , "read" : firstRead]]
-                            }
-                            .collect()
-                            .collectEntries(){item ->
-                                            [(item.id): item.read]
-                            }
-                            .set{firstRead}
+    CUTADAPT_valid_larry.out.reads
+                        .map{ meta, fastq -> 
+                        meta.single_end  = true
+                        return tuple(meta, fastq[0])}
+                        .set{firstRead}
     
+    //
+    //Module cutadapt select first 28 nulceotides of cellumi reads
+    //
+
     CUTADAPT_cut_umi(
         CUTADAPT_cut_umi_input
     )
 
-    Channel
-        CUTADAPT_cut_umi.out.reads
-                        .map{ reads ->
-                        def meta = reads[0]
-                        meta.single_end = false
+    //
+    //Combine LARRY and CELLUMI reads again.
+    //
 
-                        def shortRead = reads[1]
+    firstRead.concat(CUTADAPT_cut_umi.out.reads)
+                .map{ meta, fastq -> tuple( meta.id, fastq )}
+                .groupTuple()
+                .map{ meta, fastq -> tuple( [id : meta , single_end : false], fastq.flatten() )}
+                .set{CUTADAPT_len_filter_input}
 
-                        def first_read_el = firstRead[meta.id].value
 
-                        updatedReads = [first_read_el , shortRead]
-
-                        return new Tuple(meta,updatedReads)
-
-                        }
-                        .set{CUTADAPT_len_filter_input}
+    //
+    //Module cutadapt filter LARRY and CELLUMI reads based on length.
+    //
 
     CUTADAPT_len_filter(
         CUTADAPT_len_filter_input
     )
-                        
+
+
+    //
+    //LARRY and CELLUMI need to change from position if we want to use UMITOOLS_EXTRACT
+    //
+
+    CUTADAPT_len_filter.out.reads
+                        .map{meta , fastq -> tuple(meta.id , [fastq[1],fastq[0]])}
+                        .set{CUTADAPT_output}
+
+    //
+    //Get barcode files
+    //
+
+    CELLRANGER_COUNT.out.outs
+                    .map{meta , fles -> tuple(meta, fles[-4])}
+                    .set{barcodes}
+
+    //
+    //Gunzip the barcodes
+    //
+
+    GUNZIP(barcodes)
+
+
+    //
+    //Prepare files to concatenate
+    //
+
+    GUNZIP.out.gunzip
+                .map{meta , barcode -> tuple(meta.id[0..-3] , barcode)}
+                .groupTuple()
+                .map{ meta, barcode -> tuple( [id : meta , single_end : false], barcode.flatten() )}
+                .set{barcodes_cat}
+
+    
+    //
+    //Combine barcode files frome same sample
+    //
+
+    CAT_CAT(barcodes_cat)
+
+
+    //
+    //Make barcodes unique and remove "-1" suffix
+    //
+
+    UNIQUE(CAT_CAT.out.file_out)
+
+    //
+    //Add whitelist to read files
+    //
+
+    UNIQUE.out.file_out
+            .map{meta , file_path -> tuple(meta.id, file_path)}
+            .set{barcodes_gex}
+
+    UNIQUE.out.file_out
+        .map{meta , file_path -> tuple(meta.id.substring(0, meta.id.lastIndexOf('_')) + "_LARRY", file_path)}
+        .concat(barcodes_gex)
+        .set{barcodes_gex_larry}
+
+    CUTADAPT_output.concat(barcodes_gex_larry)
+                            .groupTuple()
+                            .map{meta , elmnts -> tuple([id : meta , single_end : false], elmnts[0] , elmnts[1] )}
+                            .set{UMITOOLS_EXTRACT_input}
+
+    //
+    //Run UMITOOLS script
+    //
+
+
+    UMITOOLS_EXTRACT(
+        UMITOOLS_EXTRACT_input
+    )
+    
+    //
+    //Take the GEX and the LARRY data together
+    //
+
+    UMITOOLS_EXTRACT.out.reads
+                .map{ meta, fastq -> tuple( meta.id.split("_")[0], fastq[1] )}
+                .groupTuple()
+                .map{ meta, fastq -> tuple( [id : meta , single_end : true], fastq.flatten() )}
+                .set{CAT_FASTQ_2_input}
+
+    //
+    //Take the LARRY and 10X reads together
+    //
+
+    CAT_FASTQ_2(
+        CAT_FASTQ_2_input
+    )
+
+    //
+    //Combine the channel with the GEX and LARRY reads together with the channel containing the GEX_LARRY reads
+    //
+
+    UMITOOLS_EXTRACT.out.reads
+                .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
+                .concat(CAT_FASTQ_2.out.reads)
+                .set{GATHER_BARCODE_input}
+
+    //
+    //Run different parameters
+    //
+
+    //LARRY HAMMING DISTANCES
+    larry_hamming = Channel.of(1, 3, 5)
+
+    //WITHIN CELL CUTOFF
+    cell_cutoff = Channel.of(0, 0.5)
+
+    //WITHIN CLONE CUTOFF
+    clone_cutoff = Channel.of(0, 0.5)
+
+    //MINIMUM LARRY UMI
+    min_larry_umi = Channel.of(1,2,3)
+
+    GATHER_BARCODE_input.combine(larry_hamming)
+                        .combine(cell_cutoff)
+                        .combine(clone_cutoff)
+                        .combine(min_larry_umi)
+                        .set{GATHER_BARCODE_input_param}
+
+
+    
+    //
+    //Gather the barcode: at some point I need to implement that LARRY and 10X library are combined together
+    //
+    
+    GATHER_BARCODE(
+        GATHER_BARCODE_input_param
+        )
 
     /*
+
     //
     // MODULE: Run FastQC
     //
     FASTQC (
-        CUTADAPT_cut_umi.out.reads
+        ch_samplesheet
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
@@ -135,6 +361,8 @@ workflow LARRY {
             sort: true,
             newLine: true
         ).set { ch_collated_versions }
+
+    
 
     //
     // MODULE: MultiQC
@@ -177,12 +405,14 @@ workflow LARRY {
 
     */
 
+
     emit:
-    cutadapt_ra = CUTADAPT_len_filter.out.reads
+    //larry_barcodes = GATHER_BARCODE.out.outs
     //multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
+
 
 
 

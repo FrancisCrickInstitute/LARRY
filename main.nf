@@ -21,19 +21,6 @@ include { LARRY  } from './workflows/larry'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_larry_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_larry_pipeline'
 
-include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_larry_pipeline'
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    GENOME PARAMETER VALUES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
-params.fasta = getGenomeAttribute('fasta')
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
@@ -57,8 +44,8 @@ workflow NFCORE_LARRY {
         samplesheet
     )
 
-    emit:
-    cutadapt_ra_reads = LARRY.out.cutadapt_ra
+    //emit:
+    //larry_output = LARRY.out.larry_barcodes
     //multiqc_report = LARRY.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }
@@ -94,8 +81,6 @@ workflow {
     )
 
     /*
-
-
     //
     // SUBWORKFLOW: Run completion tasks
     //
@@ -108,8 +93,8 @@ workflow {
         params.hook_url,
         NFCORE_LARRY.out.multiqc_report
     )
-
     */
+
 
 }
 

@@ -7,3 +7,8 @@ testing/
 testing*
 *.pyc
 conda/
+input/
+output/
+singularity/
+cellranger_reference
+input.csv

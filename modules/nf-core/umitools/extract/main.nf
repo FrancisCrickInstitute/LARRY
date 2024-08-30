@@ -1,7 +1,6 @@
 process UMITOOLS_EXTRACT {
     tag "$meta.id"
-    label "process_single"
-    label "process_long"
+    label "process_medium"
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -9,7 +8,7 @@ process UMITOOLS_EXTRACT {
         'biocontainers/umi_tools:1.1.5--py39hf95cd2a_0' }"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(reads) , path(whitelist)
 
     output:
     tuple val(meta), path("*.fastq.gz"), emit: reads
@@ -29,6 +28,7 @@ process UMITOOLS_EXTRACT {
             -I $reads \\
             -S ${prefix}.umi_extract.fastq.gz \\
             $args \\
+            --whitelist=${whitelist}
             > ${prefix}.umi_extract.log
 
         cat <<-END_VERSIONS > versions.yml
@@ -45,6 +45,7 @@ process UMITOOLS_EXTRACT {
             -S ${prefix}.umi_extract_1.fastq.gz \\
             --read2-out=${prefix}.umi_extract_2.fastq.gz \\
             $args \\
+            --whitelist=${whitelist}
             > ${prefix}.umi_extract.log
 
         cat <<-END_VERSIONS > versions.yml
