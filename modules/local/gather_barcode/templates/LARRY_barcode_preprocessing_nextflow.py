@@ -14,6 +14,7 @@ from collections import defaultdict, Counter
 from umi_tools import UMIClusterer
 import numpy as np
 import pandas as pd
+from scipy.stats import hypergeom
 
 ##Declare object classes
 class Read(NamedTuple):
@@ -131,7 +132,7 @@ for (CB, UMI), LARRY in CB_UMI_group.items():
         larry_consensus = list(larry_ids.keys())[0]
         CB_UMI_group_filtered.append(Read(cell_barcode = CB, umi = UMI, LARRY_barcode = larry_consensus))
     elif len(larry_ids) > 1:
-        larcs = UMIclusterer(seq_dict = larry_ids , ham_dist = int(${ham_larry}))
+        larcs = UMIclusterer(seq_dict = larry_ids , ham_dist = int(${params.ham_larry}))
         if len(larcs) == 1:
             CB_UMI_group_filtered.append(Read(cell_barcode = CB, umi = UMI, LARRY_barcode = larcs[0].main_seq))
         elif len(larcs) != 1:
@@ -179,7 +180,7 @@ for cb, counting in cell_barcode_grouped.items():
                                        umi_set = counting[0][2]))
     elif len(counting) != 1:
         larry_bcs = {lbc: umi_cts for lbc, umi_cts, umi_seqs in counting}
-        clustered_lbcs = UMIclusterer(seq_dict = larry_bcs , ham_dist = int(${ham_larry}))
+        clustered_lbcs = UMIclusterer(seq_dict = larry_bcs , ham_dist = int(${params.ham_larry}))
         # if all LARRY barcodes within a cell likely stem from sequencing errors,
         # we select the most common one and subsequently re-run umi-tools on the umis
         # to ensure we do not count any umi more than once
@@ -207,7 +208,7 @@ for cb, counting in cell_barcode_grouped.items():
                 # We thereby assume that LARRY barcodes that are detected at that lower level are due to 
                 # contamination, e.g., from ambient RNA. This assumption needs further testing, but may be a good 
                 # first approximation.
-                if reads >= (max(larrys.values()) * float(${within_cell_cutoff})):
+                if reads >= (max(larrys.values()) * float(${params.within_cell_cutoff})):
                     LARRY_filtered.append(Molecule(cell_barcode = cb, 
                                            count = reads,
                                            LARRY_barcode = larc,
@@ -235,7 +236,7 @@ for larry, counting in larry_barcode_grouped.items():
         # of the most commonly expressed barcode across all cells within the sample
         # NOTE: this is a first approximation and the filtering may need to be adjusted based on more objective
         # filtering parameter estimation
-        exp_filt = dict(filter(lambda elem: elem[1] >= np.mean(list(cells.values())) * float(${within_clone_cutoff}), cells.items()))
+        exp_filt = dict(filter(lambda elem: elem[1] >= np.mean(list(cells.values())) * float(${params.within_clone_cutoff}), cells.items()))
         for cb, count in exp_filt.items():
             cell_filtered.append(Molecule(cell_barcode = cb, 
                                           count = count, 
@@ -280,7 +281,7 @@ for bc, cell_counts in LARRY_groups.items():
 
 #Here we perform larry clustering across cells.
 clusterer = UMIClusterer(cluster_method="cluster")
-clustered_bcs = clusterer(larrys, threshold = int(${ham_larry}))
+clustered_bcs = clusterer(larrys, threshold = int(${params.ham_larry}))
 
 #Make the clonal groups
 clonal_groups = []
@@ -334,29 +335,72 @@ def merge_overlapping_lists(lists):
 #Calculate for the clones with different LARRY labels
 clonal_group_info_1 = pd.DataFrame(clonal_groups)
 clonal_group_info_1 = sub_group_filtering(clonal_group_info_1 , ["clonal_id"] , ["clonal_id","LARRY_barcode"])
-filt_out_1 = clonal_group_info_1.query('UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
+filt_out_1 = clonal_group_info_1.query('UMI_avg_subgroup < UMI_avg*${params.within_clone_cutoff}').index
 clonal_group_final_1 = clonal_group_info_1.drop(index = filt_out_1, columns = ['UMI_avg', 'UMI_avg_subgroup'])
 
-'''
-#Take all the clones with overlapping LARRY together
-multiple_clone_cell_list = {cell : [clone_id for clone_id  in clonal_group_final_1[clonal_group_final_1.cell_id == cell]["clonal_id"].tolist()] for cell in set(clonal_group_final_1.cell_id)}
-clone_merge_dict = {clonal_group : "clonal_supergroup_" + str(number)  for number , clonal_groups in enumerate(merge_overlapping_lists(list(multiple_clone_cell_list.values()))) for clonal_group in clonal_groups}
-clone_merge = pd.DataFrame({"clonal_id" : list(clone_merge_dict.keys()), "clone_merge_id" : list(clone_merge_dict.values())})
-clonal_group_info_2 = sub_group_filtering(pd.merge(clonal_group_final_1 , clone_merge),["clone_merge_id"] , ["clonal_id"])
-filt_out_2 = clonal_group_info_2.query('UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
-clonal_group_final_2 = clonal_group_info_2.drop(index = filt_out_2, columns = ['UMI_avg', 'UMI_avg_subgroup'])
+def cluster_merge(dataset) :
 
-#Keep clones with multiple LARRY label separate
-multiple_clone_cell_list = {cell : [clone_id for clone_id  in clonal_group_final_2[clonal_group_final_2.cell_id == cell]["clonal_id"].tolist()] for cell in set(clonal_group_final_2.cell_id)}
-multiple_clone_cell_list_sort_join = {key : "|".join(sorted(value)) for key , value in multiple_clone_cell_list.items()}
-separate_clusters = {combined_clonal : "clonal_sepgroup_" + str(number) for number , combined_clonal in enumerate(set(multiple_clone_cell_list_sort_join.values()))}
-separate_cluster_cells = {cell : separate_clusters[combine_clone] for cell , combine_clone in multiple_clone_cell_list_sort_join.items()}
-clone_sep_merge = pd.DataFrame({"cell_id" : list(separate_cluster_cells.keys()) , "clone_sep_id" : list(separate_cluster_cells.values())})
-clonal_group_info_3 = sub_group_filtering(pd.merge(clonal_group_final_2 , clone_sep_merge) ,["clone_sep_id"] , ["clone_sep_id","LARRY_barcode"])
-filt_out_3 = clonal_group_info_3.query('UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
-clonal_group_final_3 = clonal_group_info_3.drop(index = filt_out_3, columns = ['UMI_avg', 'UMI_avg_subgroup'])
-'''
+    #Create clone dictionaries with keys being the clone name and the values the cells.
+    result_dict = dataset.groupby('clonal_id')['cell_id'].apply(list).to_dict()
+
+    #Convert the dictionary into a list of lists. The lists being separate clones with cell ids.
+    clone_list = list(result_dict.values())
+
+    #Sort the clone_list from large to small
+    clone_list_sorted_all = sorted(clone_list, key=len, reverse=True)
+
+    #We only include clone lists that are larger than 1 to go through the while loops:
+    clone_list_sorted = [el for el in clone_list_sorted_all if len(el) > 1]
+
+    # Flatten clone_list_sorted
+    clone_list_sorted_flat = [item for sublist in clone_list_sorted for item in sublist]
+
+    # Remov duplicates
+    clone_list_sorted_flat_unique = list(set(clone_list_sorted_flat))
+
+    #Only maintain unique clones that are not in the multiple clone dataset yet
+    clone_list_unique = [el[0] for el in clone_list_sorted_all if (len(el) == 1) and (el[0] not in clone_list_sorted_flat_unique )]
+
+    clone_list_unique = [[el]for el in set(clone_list_unique)]
+
+    i = 0
+    while i < len(clone_list_sorted):
+        j = i + 1
+        while j < len(clone_list_sorted):
+
+            group1_set = set(clone_list_sorted[i])
+            group2_set = set(clone_list_sorted[j])
+            overlap_size = len(group1_set.intersection(group2_set))
+            group1_size = len(group1_set)
+            group2_size = len(group2_set)
+            total_size = len(set(dataset["cell_id"]))
+
+            cdf_value = hypergeom.cdf(overlap_size - 1, total_size, group1_size, group2_size)
+
+
+            if cdf_value >= ${params.hypergeom_cdf}:
+                # Fuse the lists and update the first list
+                clone_list_sorted[i] = list(set(clone_list_sorted[i] + clone_list_sorted[j]))
+                # Remove the second list as it's now merged
+                clone_list_sorted.pop(j)
+            else:
+                j += 1
+        i += 1
+    
+    clone_list_sorted = clone_list_sorted + clone_list_unique
+    new_clones = {"clone_" + str(number) : el for number , el in enumerate(clone_list_sorted)}
+    new_clones_flat = [(key, value) for key, values in new_clones.items() for value in values]
+    new_clones_flat_df = pd.DataFrame(new_clones_flat, columns=['Clone', 'Cell'])
+    cells_in_one_clone_idx = new_clones_flat_df.groupby("Cell").filter(lambda x: len(x) == 1).index
+    new_clones_flat_df = new_clones_flat_df.loc[cells_in_one_clone_idx]
+    new_clones = pd.merge(dataset , new_clones_flat_df , how = "right" , left_on = "cell_id", right_on = "Cell")
+    new_clones = new_clones.drop(['clonal_id',"cell_id","LARRY_barcode","count"], axis=1)
+    new_clones = new_clones.drop_duplicates()
+    
+    return new_clones
+
+clone_group_merged = cluster_merge(clonal_group_final_1)
 
 
 #Write out the dataframe
-clonal_group_final_1.to_csv("${meta.id}_${ham_larry}_${within_cell_cutoff}_${within_clone_cutoff}_${min_larry_umi}_clone_output.csv")
+clone_group_merged.to_csv("${meta.id}_${min_larry_umi}_clone_output.csv", index = False)

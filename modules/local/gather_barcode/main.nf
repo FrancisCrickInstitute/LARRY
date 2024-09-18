@@ -3,7 +3,7 @@ process GATHER_BARCODE {
     label 'process_medium'
 
     input:
-    tuple val(meta), path(fastq) , val(ham_larry) , val(within_cell_cutoff), val(within_clone_cutoff), val(min_larry_umi)
+    tuple val(meta), path(fastq), val(min_larry_umi)
 
     output:
     tuple val(meta), path("*clone_output.csv"), emit: outs

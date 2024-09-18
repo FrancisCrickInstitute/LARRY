@@ -343,22 +343,10 @@ workflow LARRY {
     //Run different parameters
     //
 
-    //LARRY HAMMING DISTANCES
-    larry_hamming = Channel.of(3)
-
-    //WITHIN CELL CUTOFF
-    cell_cutoff = Channel.of( 0.5)
-
-    //WITHIN CLONE CUTOFF
-    clone_cutoff = Channel.of(0 )
-
     //MINIMUM LARRY UMI
-    min_larry_umi = Channel.of(1)
+    min_larry_umi = Channel.of(2,5,10)
 
-    GATHER_BARCODE_input.combine(larry_hamming)
-                        .combine(cell_cutoff)
-                        .combine(clone_cutoff)
-                        .combine(min_larry_umi)
+    GATHER_BARCODE_input.combine(min_larry_umi)
                         .set{GATHER_BARCODE_input_param}
 
 
