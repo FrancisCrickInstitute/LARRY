@@ -87,7 +87,10 @@ workflow LARRY {
 
     SAMTOOLS_VIEW_unmapped.out.bam
                         .concat(SAMTOOLS_VIEW_larry.out.bam)
-                        .map{ meta, fastq -> tuple( meta.id[0..-3], fastq )}
+                        .map{ meta, fastq -> 
+                            def lastUnderscoreIndex = meta.id.lastIndexOf('_')
+                            def modifiedMetaId = meta.id.substring(0, lastUnderscoreIndex)
+                            tuple( modifiedMetaId ,  fastq )}
                         .groupTuple()
                         .map{ meta, fastq -> tuple( [id : meta , single_end : false], fastq.flatten() )}
                         .set{bam_file_tomerge}
@@ -116,7 +119,10 @@ workflow LARRY {
     //
 
     ch_samplesheet.filter { it[0].id.contains('LARRY')}
-                    .map{ meta, fastq -> tuple( meta.id[0..-3], fastq )}
+                    .map{ meta, fastq -> 
+                        def lastUnderscoreIndex = meta.id.lastIndexOf('_')
+                        def modifiedMetaId = meta.id.substring(0, lastUnderscoreIndex)
+                        tuple( modifiedMetaId ,  fastq )}
                     .groupTuple()
                     .map{ meta, fastq -> tuple( [id : meta , single_end : false], fastq.flatten() )}
                     .concat(BAMTOFASTQ10X.out.fastq)
@@ -234,8 +240,12 @@ workflow LARRY {
     //Prepare files to concatenate
     //
 
+
     GUNZIP.out.gunzip
-                .map{meta , barcode -> tuple(meta.id[0..-3] , barcode)}
+                .map{ meta, barcode -> 
+                    def lastUnderscoreIndex = meta.id.lastIndexOf('_')
+                    def modifiedMetaId = meta.id.substring(0, lastUnderscoreIndex)
+                    tuple( modifiedMetaId ,  barcode )}
                 .groupTuple()
                 .map{ meta, barcode -> tuple( [id : meta , single_end : false], barcode.flatten() )}
                 .set{barcodes_cat}
@@ -262,10 +272,19 @@ workflow LARRY {
             .map{meta , file_path -> tuple(meta.id, file_path)}
             .set{barcodes_gex}
 
-    UNIQUE.out.file_out
+    if (params.gex_and_larry){
+
+        UNIQUE.out.file_out
         .map{meta , file_path -> tuple(meta.id.substring(0, meta.id.lastIndexOf('_')) + "_LARRY", file_path)}
         .concat(barcodes_gex)
         .set{barcodes_gex_larry}
+
+    }
+
+    else {
+        barcodes_gex.set{barcodes_gex_larry}
+
+    }
 
     CUTADAPT_output.concat(barcodes_gex_larry)
                             .groupTuple()
@@ -276,53 +295,65 @@ workflow LARRY {
     //Run UMITOOLS script
     //
 
-
     UMITOOLS_EXTRACT(
         UMITOOLS_EXTRACT_input
     )
+
     
     //
     //Take the GEX and the LARRY data together
     //
 
-    UMITOOLS_EXTRACT.out.reads
-                .map{ meta, fastq -> tuple( meta.id.split("_")[0], fastq[1] )}
-                .groupTuple()
-                .map{ meta, fastq -> tuple( [id : meta , single_end : true], fastq.flatten() )}
-                .set{CAT_FASTQ_2_input}
+    if (params.gex_and_larry){
 
-    //
-    //Take the LARRY and 10X reads together
-    //
+        UMITOOLS_EXTRACT.out.reads
+                    .map{ meta, fastq -> tuple( meta.id.split("_")[0], fastq[1] )}
+                    .groupTuple()
+                    .map{ meta, fastq -> tuple( [id : meta , single_end : true], fastq.flatten() )}
+                    .set{CAT_FASTQ_2_input}
 
-    CAT_FASTQ_2(
-        CAT_FASTQ_2_input
-    )
+        //
+        //Take the LARRY and 10X reads together
+        //
 
-    //
-    //Combine the channel with the GEX and LARRY reads together with the channel containing the GEX_LARRY reads
-    //
+        CAT_FASTQ_2(
+            CAT_FASTQ_2_input
+        )
 
-    UMITOOLS_EXTRACT.out.reads
-                .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
-                .concat(CAT_FASTQ_2.out.reads)
-                .set{GATHER_BARCODE_input}
+        //
+        //Combine the channel with the GEX and LARRY reads together with the channel containing the GEX_LARRY reads
+        //
+
+        UMITOOLS_EXTRACT.out.reads
+                    .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
+                    .concat(CAT_FASTQ_2.out.reads)
+                    .set{GATHER_BARCODE_input}
+    }
+
+    else {
+
+        UMITOOLS_EXTRACT.out.reads
+            .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
+            .set{GATHER_BARCODE_input}
+
+    }
+
 
     //
     //Run different parameters
     //
 
     //LARRY HAMMING DISTANCES
-    larry_hamming = Channel.of(1, 3, 5)
+    larry_hamming = Channel.of(3)
 
     //WITHIN CELL CUTOFF
-    cell_cutoff = Channel.of(0, 0.5)
+    cell_cutoff = Channel.of( 0.5)
 
     //WITHIN CLONE CUTOFF
-    clone_cutoff = Channel.of(0, 0.5)
+    clone_cutoff = Channel.of(0 )
 
     //MINIMUM LARRY UMI
-    min_larry_umi = Channel.of(1,2,3)
+    min_larry_umi = Channel.of(1)
 
     GATHER_BARCODE_input.combine(larry_hamming)
                         .combine(cell_cutoff)

@@ -297,18 +297,66 @@ for bc_group in clustered_bcs:
                     count = count))
     i += 1
 
-#Calculate subgroup averages
-clonal_group_info = pd.DataFrame(clonal_groups)
-clonal_group_info.loc[:,"UMI_avg"] = clonal_group_info.groupby(by = ["clonal_id"])["count"].transform(lambda x : x.mean()).to_frame()
-nb_cells = clonal_group_info.groupby(by = ['clonal_id']).size().to_frame().reset_index().rename(columns = {0 : "nb_cells"})
-clonal_group_info = pd.merge(clonal_group_info , nb_cells, how = "left" , on = "clonal_id")
-clonal_group_info.loc[:,"UMI_avg_subgroup"] = clonal_group_info.groupby(by = ["clonal_id", "LARRY_barcode"])["count"].transform(lambda x : x.mean()).to_frame()
-nb_of_subgroup = clonal_group_info.groupby(by = ["clonal_id","LARRY_barcode"]).size().to_frame().reset_index().rename(columns = {0 : "nb_of_subgroup"})
-clonal_group_info = pd.merge(clonal_group_info , nb_of_subgroup , how = "left" , on = ["clonal_id" , "LARRY_barcode"])
 
-#Filter the dataframe
-filt_out = clonal_group_info.query('nb_of_subgroup > 1 and  nb_cells < ${params.clone_size_cutoff} and UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
-clonal_group_final = clonal_group_info.drop(index = filt_out,columns = ['UMI_avg', 'nb_cells', 'nb_cells', 'nb_of_subgroup'])
+#Calculate subgroup averages
+def sub_group_filtering(dataset , group_list , sub_group_list):
+    dataset.loc[:,"UMI_avg"] = dataset.groupby(by = group_list)["count"].transform(lambda x : x.mean()).to_frame()
+    dataset.loc[:,"UMI_avg_subgroup"] = dataset.groupby(by = sub_group_list)["count"].transform(lambda x : x.mean()).to_frame() 
+    
+    return dataset
+
+#Combine overlapping lists
+def merge_overlapping_lists(lists):
+    merged_lists = []
+    
+    while lists:
+        # Start with the first list in the remaining lists
+        first, *rest = lists
+        first = set(first)
+        
+        # Initialize a list of lists that will be merged in this iteration
+        merged = False
+        for i, current_list in enumerate(rest):
+            # If there's an overlap, merge the lists
+            if first & set(current_list):
+                lists = rest[:i] + rest[i+1:]  # Remove the current list from the remaining lists
+                lists.append(list(first | set(current_list)))  # Add the merged list back to the list
+                merged = True
+                break
+
+        # If no lists were merged in this iteration, move first list to merged_lists
+        if not merged:
+            merged_lists.append(list(first))
+            lists = rest
+
+    return merged_lists
+
+#Calculate for the clones with different LARRY labels
+clonal_group_info_1 = pd.DataFrame(clonal_groups)
+clonal_group_info_1 = sub_group_filtering(clonal_group_info_1 , ["clonal_id"] , ["clonal_id","LARRY_barcode"])
+filt_out_1 = clonal_group_info_1.query('UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
+clonal_group_final_1 = clonal_group_info_1.drop(index = filt_out_1, columns = ['UMI_avg', 'UMI_avg_subgroup'])
+
+'''
+#Take all the clones with overlapping LARRY together
+multiple_clone_cell_list = {cell : [clone_id for clone_id  in clonal_group_final_1[clonal_group_final_1.cell_id == cell]["clonal_id"].tolist()] for cell in set(clonal_group_final_1.cell_id)}
+clone_merge_dict = {clonal_group : "clonal_supergroup_" + str(number)  for number , clonal_groups in enumerate(merge_overlapping_lists(list(multiple_clone_cell_list.values()))) for clonal_group in clonal_groups}
+clone_merge = pd.DataFrame({"clonal_id" : list(clone_merge_dict.keys()), "clone_merge_id" : list(clone_merge_dict.values())})
+clonal_group_info_2 = sub_group_filtering(pd.merge(clonal_group_final_1 , clone_merge),["clone_merge_id"] , ["clonal_id"])
+filt_out_2 = clonal_group_info_2.query('UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
+clonal_group_final_2 = clonal_group_info_2.drop(index = filt_out_2, columns = ['UMI_avg', 'UMI_avg_subgroup'])
+
+#Keep clones with multiple LARRY label separate
+multiple_clone_cell_list = {cell : [clone_id for clone_id  in clonal_group_final_2[clonal_group_final_2.cell_id == cell]["clonal_id"].tolist()] for cell in set(clonal_group_final_2.cell_id)}
+multiple_clone_cell_list_sort_join = {key : "|".join(sorted(value)) for key , value in multiple_clone_cell_list.items()}
+separate_clusters = {combined_clonal : "clonal_sepgroup_" + str(number) for number , combined_clonal in enumerate(set(multiple_clone_cell_list_sort_join.values()))}
+separate_cluster_cells = {cell : separate_clusters[combine_clone] for cell , combine_clone in multiple_clone_cell_list_sort_join.items()}
+clone_sep_merge = pd.DataFrame({"cell_id" : list(separate_cluster_cells.keys()) , "clone_sep_id" : list(separate_cluster_cells.values())})
+clonal_group_info_3 = sub_group_filtering(pd.merge(clonal_group_final_2 , clone_sep_merge) ,["clone_sep_id"] , ["clone_sep_id","LARRY_barcode"])
+filt_out_3 = clonal_group_info_3.query('UMI_avg_subgroup < UMI_avg*${within_clone_cutoff}').index
+clonal_group_final_3 = clonal_group_info_3.drop(index = filt_out_3, columns = ['UMI_avg', 'UMI_avg_subgroup'])
+'''
+
 
 #Write out the dataframe
-clonal_group_final.to_csv("${meta.id}_${ham_larry}_${within_cell_cutoff}_${within_clone_cutoff}_${min_larry_umi}_clone_output.csv")
+clonal_group_final_1.to_csv("${meta.id}_${ham_larry}_${within_cell_cutoff}_${within_clone_cutoff}_${min_larry_umi}_clone_output.csv")
