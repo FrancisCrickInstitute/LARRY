@@ -344,7 +344,7 @@ workflow LARRY {
     //
 
     //MINIMUM LARRY UMI
-    min_larry_umi = Channel.of(2,5,10)
+    min_larry_umi = Channel.of(0)
 
     GATHER_BARCODE_input.combine(min_larry_umi)
                         .set{GATHER_BARCODE_input_param}

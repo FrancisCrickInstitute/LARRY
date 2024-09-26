@@ -338,6 +338,7 @@ clonal_group_info_1 = sub_group_filtering(clonal_group_info_1 , ["clonal_id"] , 
 filt_out_1 = clonal_group_info_1.query('UMI_avg_subgroup < UMI_avg*${params.within_clone_cutoff}').index
 clonal_group_final_1 = clonal_group_info_1.drop(index = filt_out_1, columns = ['UMI_avg', 'UMI_avg_subgroup'])
 
+"""
 def cluster_merge(dataset) :
 
     #Create clone dictionaries with keys being the clone name and the values the cells.
@@ -400,7 +401,8 @@ def cluster_merge(dataset) :
     return new_clones
 
 clone_group_merged = cluster_merge(clonal_group_final_1)
+"""
 
 
 #Write out the dataframe
-clone_group_merged.to_csv("${meta.id}_${min_larry_umi}_clone_output.csv", index = False)
+clonal_group_final_1.to_csv("${meta.id}_${min_larry_umi}_clone_output.csv", index = False)
