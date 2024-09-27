@@ -3,14 +3,13 @@ process GATHER_BARCODE {
     label 'process_medium'
 
     input:
-    tuple val(meta), path(fastq), val(min_larry_umi)
+    tuple val(meta), path(fastq)
 
     output:
     tuple val(meta), path("*clone_output.csv"), emit: outs
 
     script:
-    args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
+
     template "LARRY_barcode_preprocessing_nextflow.py"
 
 }

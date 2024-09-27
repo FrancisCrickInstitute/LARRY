@@ -1,11 +1,16 @@
-#!/opt/conda/bin/python
-##/usr/local/bin/python
+#!/opt/conda/envs/pymc-dev/bin/python
+
+
 
 ##Libraries
 import os
 
-#os.mkdir('./mplconfigdir')
+os.mkdir('./mplconfigdir')
+os.mkdir('./compiledir')
 os.environ['MPLCONFIGDIR'] = './mplconfigdir'
+
+import pytensor as pt
+pt.config.compiledir = './compiledir'
 
 from typing import NamedTuple, List, Dict
 import pyfastx
@@ -15,6 +20,11 @@ from umi_tools import UMIClusterer
 import numpy as np
 import pandas as pd
 from scipy.stats import hypergeom
+import pymc as pm
+
+# Set a random seed for reproducibility
+np.random.seed(42)
+
 
 ##Declare object classes
 class Read(NamedTuple):
@@ -50,6 +60,7 @@ class clonal_group(NamedTuple):
 
 ##Declare functions
 def UMIclusterer(seq_dict: dict, ham_dist: int = 1) -> list[ClusteredSeq]:
+
     """
     cluster sequences by similarity using umi-tools
     The clustering is performed using the network-based method 'cluster'. 
@@ -67,6 +78,7 @@ def UMIclusterer(seq_dict: dict, ham_dist: int = 1) -> list[ClusteredSeq]:
     List of the NamedTuple class ClusteredSeq, which consists of the main sequence of the group ('main_seq'), 
     the number of sequences in the group ('counts') and all sequences in the group ('associated_seqs')
     """
+
     clusterer=UMIClusterer( cluster_method="cluster")
     seqs = {bytes(seq, encoding="ascii"):count for seq, count in seq_dict.items()}
     clustered_seqs =clusterer(seqs, threshold = ham_dist)
@@ -80,6 +92,7 @@ def UMIclusterer(seq_dict: dict, ham_dist: int = 1) -> list[ClusteredSeq]:
     
      
 def getUMIset(umi_seqs, ham_dist: int = 1):
+
     """
     cluster UMI sequences by similarity using umi-tools
     The clustering is performed using the network-based method 'cluster'. 
@@ -95,6 +108,7 @@ def getUMIset(umi_seqs, ham_dist: int = 1):
     List of the NamedTuple class ClusteredUMI, which consists of the set of unique UMI sequences and the  
     the number of UMIs ('counts') in the set
     """
+
     clustered_umis = UMIclusterer(seq_dict = umi_seqs , ham_dist = ham_dist)
     umi_counts = len(clustered_umis)
     umis = []
@@ -145,18 +159,60 @@ for read in CB_UMI_group_filtered:
 
 #Count the number of umis for every CB LARRY combination.
 cb_larry_counts = []
+all_larry_counts = []
 for (CB, LARRY), UMI in CB_LARRY_group.items():
     umi_counts = dict(Counter(UMI))
     #Here you perform clustering with hamming distance 1
-    umi_seqs = getUMIset(umi_counts , ham_dist = int(${params.ham_umi}))
+    umi_seqs = getUMIset(umi_counts , ham_dist = ${params.ham_umi})
+    all_larry_counts.append(umi_seqs.counts)
     cb_larry_counts.append(Molecule(cell_barcode = CB, 
                                     count = umi_seqs.counts, 
                                     LARRY_barcode = LARRY, 
                                     umi_set = tuple(umi_seqs.umi_seq)))
 
+#Determine the count cutoff
+
+data_points = np.array(all_larry_counts) - 1
+
+test_value = 0
+p_param = 1
+cutoff = 0
+
+p_param_new = 0.9
+rate_difference = 1
+
+while rate_difference > 0.01:
+
+    with pm.Model() as model:
+        # Prior for the number of successes, modeled as a Poisson variable
+
+        cutoff = cutoff + 1
+        data_points = data_points[data_points > 0]
+        data_points = data_points - 1
+
+        # Prior for the probability of success
+        p_param = pm.Beta('p_param', alpha=1, beta=15)  # Uniform prior for probability
+
+        # Likelihood of the observed data
+        likelihood = pm.NegativeBinomial('likelihood', n=1, p=p_param, observed=data_points)
+
+        # Inference
+        trace = pm.sample(2000, tune=1000, return_inferencedata=True , cores =4, random_seed=42)
+
+    p_param_old = p_param_new
+    p_param_new = trace["posterior"]["p_param"].mean()
+
+    p_mean = np.mean([p_param_old , p_param_new])
+    difference = abs(p_param_new - p_param_old)
+    rate_difference = difference / p_mean
+
+
+#Remove LARRY barcodes that are below the treshhold.
+cb_larry_counts_filtered = [el for el in cb_larry_counts if el.count >= cutoff]
+
 #For every cell get the LARRY and UMI information
 cell_barcode_grouped = defaultdict(list)
-for molecule in cb_larry_counts:
+for molecule in cb_larry_counts_filtered:
     cell_barcode_grouped[molecule.cell_barcode].append((molecule.LARRY_barcode, molecule.count, molecule.umi_set))
 
 #This is within cell filtering.
@@ -208,8 +264,7 @@ for cb, counting in cell_barcode_grouped.items():
                 # We thereby assume that LARRY barcodes that are detected at that lower level are due to 
                 # contamination, e.g., from ambient RNA. This assumption needs further testing, but may be a good 
                 # first approximation.
-                if reads >= (max(larrys.values()) * float(${params.within_cell_cutoff})):
-                    LARRY_filtered.append(Molecule(cell_barcode = cb, 
+                LARRY_filtered.append(Molecule(cell_barcode = cb, 
                                            count = reads,
                                            LARRY_barcode = larc,
                                            umi_set = tuple(umi_clu[larc].umi_seq)))
@@ -236,8 +291,7 @@ for larry, counting in larry_barcode_grouped.items():
         # of the most commonly expressed barcode across all cells within the sample
         # NOTE: this is a first approximation and the filtering may need to be adjusted based on more objective
         # filtering parameter estimation
-        exp_filt = dict(filter(lambda elem: elem[1] >= np.mean(list(cells.values())) * float(${params.within_clone_cutoff}), cells.items()))
-        for cb, count in exp_filt.items():
+        for cb, count in cells.items():
             cell_filtered.append(Molecule(cell_barcode = cb, 
                                           count = count, 
                                           LARRY_barcode = larry, 
@@ -245,15 +299,12 @@ for larry, counting in larry_barcode_grouped.items():
 
 #Filter based on minimum larry umi parameter
 cell_filtered_df = pd.DataFrame(cell_filtered)
-cell_filtered_umi_df = cell_filtered_df[cell_filtered_df["count"] > int(${min_larry_umi})]
 
 #Add sample ids
 cell_filtered_df = cell_filtered_df.assign(sample_id = "${meta.id}")
-cell_filtered_umi_df = cell_filtered_umi_df.assign(sample_id = "${meta.id}")
 
 #Select columns of interest
-cell_filtered_df = cell_filtered_df[["sample_id", "LARRY_barcode", "cell_barcode", "count"]]
-barcode_df = cell_filtered_umi_df[["sample_id", "LARRY_barcode", "cell_barcode", "count"]]
+barcode_df = cell_filtered_df[["sample_id", "LARRY_barcode", "cell_barcode", "count"]]
 
 #Rename the cells just to make sure the naming is definitely unique
 barcode_df["cell_id"] = barcode_df[["sample_id", "cell_barcode"]].apply(".".join, axis = 1)
@@ -335,10 +386,8 @@ def merge_overlapping_lists(lists):
 #Calculate for the clones with different LARRY labels
 clonal_group_info_1 = pd.DataFrame(clonal_groups)
 clonal_group_info_1 = sub_group_filtering(clonal_group_info_1 , ["clonal_id"] , ["clonal_id","LARRY_barcode"])
-filt_out_1 = clonal_group_info_1.query('UMI_avg_subgroup < UMI_avg*${params.within_clone_cutoff}').index
-clonal_group_final_1 = clonal_group_info_1.drop(index = filt_out_1, columns = ['UMI_avg', 'UMI_avg_subgroup'])
+clonal_group_final_1 = clonal_group_info_1.drop(columns = ['UMI_avg', 'UMI_avg_subgroup'])
 
-"""
 def cluster_merge(dataset) :
 
     #Create clone dictionaries with keys being the clone name and the values the cells.
@@ -374,20 +423,24 @@ def cluster_merge(dataset) :
             overlap_size = len(group1_set.intersection(group2_set))
             group1_size = len(group1_set)
             group2_size = len(group2_set)
-            total_size = len(set(dataset["cell_id"]))
+            jaccard_similarity =  overlap_size / (group1_size + group2_size - overlap_size)
 
-            cdf_value = hypergeom.cdf(overlap_size - 1, total_size, group1_size, group2_size)
-
-
-            if cdf_value >= ${params.hypergeom_cdf}:
+            if jaccard_similarity == 1:
                 # Fuse the lists and update the first list
                 clone_list_sorted[i] = list(set(clone_list_sorted[i] + clone_list_sorted[j]))
                 # Remove the second list as it's now merged
                 clone_list_sorted.pop(j)
+
+            elif (overlap_size > 1) and (jaccard_similarity > 0.5):
+                # Fuse the lists and update the first list
+                clone_list_sorted[i] = list(set(clone_list_sorted[i] + clone_list_sorted[j]))
+                # Remove the second list as it's now merged
+                clone_list_sorted.pop(j)
+
             else:
                 j += 1
         i += 1
-    
+
     clone_list_sorted = clone_list_sorted + clone_list_unique
     new_clones = {"clone_" + str(number) : el for number , el in enumerate(clone_list_sorted)}
     new_clones_flat = [(key, value) for key, values in new_clones.items() for value in values]
@@ -397,12 +450,12 @@ def cluster_merge(dataset) :
     new_clones = pd.merge(dataset , new_clones_flat_df , how = "right" , left_on = "cell_id", right_on = "Cell")
     new_clones = new_clones.drop(['clonal_id',"cell_id","LARRY_barcode","count"], axis=1)
     new_clones = new_clones.drop_duplicates()
-    
+
     return new_clones
 
 clone_group_merged = cluster_merge(clonal_group_final_1)
-"""
 
+output_name = "${meta.id}_" + str(cutoff) + "_clone_output.csv"
 
 #Write out the dataframe
-clonal_group_final_1.to_csv("${meta.id}_${min_larry_umi}_clone_output.csv", index = False)
+clone_group_merged.to_csv(output_name, index = False)

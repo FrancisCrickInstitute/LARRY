@@ -343,20 +343,13 @@ workflow LARRY {
     //Run different parameters
     //
 
-    //MINIMUM LARRY UMI
-    min_larry_umi = Channel.of(0)
-
-    GATHER_BARCODE_input.combine(min_larry_umi)
-                        .set{GATHER_BARCODE_input_param}
-
-
     
     //
     //Gather the barcode: at some point I need to implement that LARRY and 10X library are combined together
     //
     
     GATHER_BARCODE(
-        GATHER_BARCODE_input_param
+        GATHER_BARCODE_input
         )
 
     /*
