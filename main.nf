@@ -45,8 +45,7 @@ workflow NFCORE_LARRY {
     )
 
     //emit:
-    //larry_output = LARRY.out.larry_barcodes
-    //multiqc_report = LARRY.out.multiqc_report // channel: /path/to/multiqc_report.html
+    larry_output = LARRY.out.larry_barcodes
 
 }
 /*
@@ -80,7 +79,6 @@ workflow {
         PIPELINE_INITIALISATION.out.samplesheet
     )
 
-    /*
     //
     // SUBWORKFLOW: Run completion tasks
     //
@@ -91,9 +89,7 @@ workflow {
         params.outdir,
         params.monochrome_logs,
         params.hook_url,
-        NFCORE_LARRY.out.multiqc_report
     )
-    */
 
 
 }

@@ -181,7 +181,8 @@ cutoff = 0
 p_param_new = 0.9
 rate_difference = 1
 
-while rate_difference > 0.01:
+#while rate_difference > 0.01:
+while rate_difference > 1:
 
     with pm.Model() as model:
         # Prior for the number of successes, modeled as a Poisson variable
@@ -458,4 +459,4 @@ clone_group_merged = cluster_merge(clonal_group_final_1)
 output_name = "${meta.id}_" + str(cutoff) + "_clone_output.csv"
 
 #Write out the dataframe
-clone_group_merged.to_csv(output_name, index = False)
+clonal_group_info_1.to_csv(output_name, index = False)
