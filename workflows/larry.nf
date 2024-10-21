@@ -9,7 +9,7 @@ include { SAMTOOLS_VIEW as SAMTOOLS_VIEW_larry} from '../modules/nf-core/samtool
 include { SAMTOOLS_MERGE } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_SORT } from '../modules/nf-core/samtools/sort/main'
 include { BAMTOFASTQ10X } from '../modules/nf-core/bamtofastq10x/main'
-include { CAT_FASTQ as CAT_FASTQ_1} from '../modules/nf-core/cat/fastq/main'
+include { CAT_FASTQ} from '../modules/nf-core/cat/fastq/main'
 include { CUTADAPT as CUTADAPT_remove_adapt  } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_valid_larry   } from '../modules/nf-core/cutadapt/main'
 include { CUTADAPT as CUTADAPT_cut_umi       } from '../modules/nf-core/cutadapt/main'
@@ -18,7 +18,6 @@ include { GUNZIP                   } from '../modules/nf-core/gunzip/main'
 include { CAT_CAT } from '../modules/nf-core/cat/cat/main'
 include { UNIQUE } from '../modules/local/unique/main'
 include { UMITOOLS_EXTRACT                   } from '../modules/nf-core/umitools/extract/main'
-include { CAT_FASTQ as CAT_FASTQ_2} from '../modules/nf-core/cat/fastq/main'
 include { GATHER_BARCODE                   } from '../modules/local/gather_barcode/main'
 include { paramsSummaryMap                   } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -129,7 +128,7 @@ workflow LARRY {
     //Module concatenate
     //
 
-    CAT_FASTQ_1(
+    CAT_FASTQ(
         gex_larry_together
     )
 
@@ -139,7 +138,7 @@ workflow LARRY {
     //
 
 
-    CAT_FASTQ_1.out.reads
+    CAT_FASTQ.out.reads
                 .map{ meta, fastq -> tuple(meta , [fastq[1] , fastq[0]])}
                 .set{gex_larry_together_reverse}
 
@@ -296,51 +295,12 @@ workflow LARRY {
         UMITOOLS_EXTRACT_input
     )
 
-    
-    //
-    //Take the GEX and the LARRY data together
-    //
 
-    if (params.gex_and_larry){
-
-        UMITOOLS_EXTRACT.out.reads
-                    .map{ meta, fastq -> tuple( meta.id.split("_")[0], fastq[1] )}
-                    .groupTuple()
-                    .map{ meta, fastq -> tuple( [id : meta , single_end : true], fastq.flatten() )}
-                    .set{CAT_FASTQ_2_input}
-
-        //
-        //Take the LARRY and 10X reads together
-        //
-
-        CAT_FASTQ_2(
-            CAT_FASTQ_2_input
-        )
-
-        //
-        //Combine the channel with the GEX and LARRY reads together with the channel containing the GEX_LARRY reads
-        //
-
-        UMITOOLS_EXTRACT.out.reads
-                    .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
-                    .concat(CAT_FASTQ_2.out.reads)
-                    .set{GATHER_BARCODE_input}
-    }
-
-    else {
-
-        UMITOOLS_EXTRACT.out.reads
-            .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
-            .set{GATHER_BARCODE_input}
-
-    }
+    UMITOOLS_EXTRACT.out.reads
+        .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
+        .set{GATHER_BARCODE_input}
 
 
-    //
-    //Run different parameters
-    //
-
-    
     //
     //Gather the barcode: at some point I need to implement that LARRY and 10X library are combined together
     //

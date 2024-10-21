@@ -6,7 +6,7 @@ process GATHER_BARCODE {
     tuple val(meta), path(fastq)
 
     output:
-    tuple val(meta), path("*clone_output.csv"), emit: outs
+    tuple val(meta),file("*.png"),path("*single_row.csv"), path("*_clone_output.csv"), emit: outs
 
     script:
 
