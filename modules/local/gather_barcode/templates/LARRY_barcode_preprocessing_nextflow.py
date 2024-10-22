@@ -84,7 +84,7 @@ def UMIclusterer(seq_dict: dict, ham_dist: int = 1) -> list[ClusteredSeq]:
     clustered_seqs =clusterer(seqs, threshold = ham_dist)
     seq_groups = []
     for seq_group in clustered_seqs:
-        seq_group_bc = [bc.decode() for bc in seq_group]
+        seq_group_bc = sorted([bc.decode() for bc in seq_group])
         seq_groups.append(ClusteredSeq(main_seq = seq_group_bc[0], 
                                        counts = len(seq_group_bc), 
                                        associated_seqs = tuple(seq_group_bc)))
