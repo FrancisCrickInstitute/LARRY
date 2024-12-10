@@ -18,6 +18,7 @@ include { GUNZIP                   } from '../modules/nf-core/gunzip/main'
 include { CAT_CAT } from '../modules/nf-core/cat/cat/main'
 include { UNIQUE } from '../modules/local/unique/main'
 include { UMITOOLS_EXTRACT                   } from '../modules/nf-core/umitools/extract/main'
+include { FASTQ_SIZE } from '../modules/local/fastq_size/main'
 include { GATHER_BARCODE                   } from '../modules/local/gather_barcode/main'
 include { paramsSummaryMap                   } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -298,8 +299,15 @@ workflow LARRY {
 
     UMITOOLS_EXTRACT.out.reads
         .map{ meta, fastq -> tuple( [id : meta.id , single_end : true] , fastq[1] )}
-        .set{GATHER_BARCODE_input}
+        .set{COUNT_FASTQ_input}
 
+
+    FASTQ_SIZE(COUNT_FASTQ_input)
+
+    FASTQ_SIZE.out.outs
+        .filter{v -> v[2].toInteger() > 1}
+        .map{meta , fastq , file_size -> tuple(meta , fastq)}
+        .set{GATHER_BARCODE_input}
 
     //
     //Gather the barcode: at some point I need to implement that LARRY and 10X library are combined together
@@ -308,7 +316,6 @@ workflow LARRY {
     GATHER_BARCODE(
         GATHER_BARCODE_input
         )
-
 
 
     emit:

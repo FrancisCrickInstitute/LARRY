@@ -72,7 +72,7 @@
                     "default": true
                 }
             },
-            "required": ["cellranger_reference", "ham_larry", "ham_umi", "gex_and_larry"]
+            "required": ["cellranger_reference", "ham_larry", "ham_umi"]
         },
         "institutional_config_options": {
             "title": "Institutional config options",
