@@ -1,7 +1,7 @@
 <h1>
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/nf-core-larry_logo_dark.png">
-    <img alt="nf-core/larry" src="docs/images/nf-core-larry_logo_light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/nf-core-larry_logo_2_dark.png">
+    <img alt="nf-core/larry" src="docs/images/nf-core-larry_logo_2_light.png">
   </picture>
 </h1>
 
@@ -19,41 +19,52 @@
 
 ## Introduction
 
-**nf-core/larry** is a bioinformatics pipeline that ...
-
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+**nf-core/larry** is a bioinformatics pipeline that determines the clonal composition of cells. Cells have been labeled with (a) LARRY barcode(s). Clones are cells that originate from the same LARRY labelled cel (belong to the same lineage). The pipeline requires 10x Chromium Single Cell data (GEX) and paired-end Illumina sequences of PCR-enriched LARRY labels (LARRY). It takes a samplesheet and FASTQ files as input 
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
 
-1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+1. Cellranger count module (GEX) ([`cellranger_count`](https://nf-co.re/modules/cellranger_count/))
+2. Obtain the unmapped reads (GEX) ([`samtools_view`](https://nf-co.re/modules/samtools_view/))
+3. Obtain reads mapped to the LARRY construct (GEX) ([`samtools_view`](https://nf-co.re/modules/samtools_view/))
+4. Merge the unmapped and LARRY reads (GEX) ([`samtools_merge`](https://nf-co.re/modules/samtools_merge/))
+5. Sort bam file (GEX) ([`samtools_sort`](https://nf-co.re/modules/samtools_sort/))
+6. Convert 10x bam to FASTQ (GEX) ([`bamtofastq10x`](https://nf-co.re/modules/bamtofastq10x/))
+7. Concatenate fastq files from same sample (GEX + LARRY) ([`cat_fastq`](https://nf-co.re/modules/cat_fastq/))
+8. Remove adapter sequences (GEX + LARRY) ([`cutadapt`](https://nf-co.re/modules/cutadapt/))
+9. Check for valid LARRY label (GEX + LARRY) ([`cutadapt`](https://nf-co.re/modules/cutadapt/))
+10. Select first 28 nucleotides from the second read to obtain 10x barcode and UMI (CELLUMI) (GEX + LARRY) ([`cutadapt`](https://nf-co.re/modules/cutadapt/))
+11. Filter LARRY and CULLUMI reads based on length (GEX + LARRY) ([`cutadapt`](https://nf-co.re/modules/cutadapt/))
+12. Obtain cell barcodes from Cellranger that make the treshold (GEX) ([`gunzip`](https://nf-co.re/modules/gunzip/)) ([`cat_cat`](https://nf-co.re/modules/cat_cat/))
+13. Extract UMI barcode from a read and add it to the read name (GEX + LARRY) ([`umitools_extract`](https://nf-co.re/modules/umitools_extract/))
+14. Run bespoke script to obtain the LARRY label counts, determine cutoff and combine clone ids with multiple LARRY labels.
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
 
 First, prepare a samplesheet with your input data that looks as follows:
 
-`samplesheet.csv`:
+`input.csv`:
 
 ```csv
 sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample1_GEX_1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample1_GEX_2,AEG588A2_S1_L002_R1_001.fastq.gz,AEG588A2_S1_L002_R2_001.fastq.gz
+sample1_LARRY_1,AEG588A3_S1_L002_R1_001.fastq.gz,AEG588A3_S1_L002_R2_001.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Each row represents a pair of fastq files (paired end).
 
--->
+The sample name should be structured as follows:
+1. Sample name
+2. GEX/LARRY (depending on the library)
+3. File number. Files with same sample name and GEX/LARRY should be enumerated: 1, 2, 3 ...
+
+These three elements should be connected by an "_"
+
 
 Now, you can run the pipeline using:
 
@@ -61,9 +72,9 @@ Now, you can run the pipeline using:
 
 ```bash
 nextflow run nf-core/larry \
-   -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR>
+   --input <SAMPLESHEET> \
+   --outdir <OUTDIR> \
+   --reference <CELLRANGER REFERENCE>
 ```
 
 > [!WARNING]
@@ -84,7 +95,9 @@ nf-core/larry was originally written by Jasper Depotter.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+- Stephanie Strohbuecker
+- Giulia Boezio
+
 
 ## Contributions and Support
 

@@ -154,7 +154,7 @@ workflow LARRY {
 
     
     //
-    //Module cutadapt check valed larry
+    //Module cutadapt check valid larry
     //
 
     CUTADAPT_valid_larry(
@@ -183,7 +183,7 @@ workflow LARRY {
                         .set{firstRead}
     
     //
-    //Module cutadapt select first 28 nulceotides of cellumi reads
+    //Module cutadapt select first 28 nucleotides of cellumi reads
     //
 
     CUTADAPT_cut_umi(
