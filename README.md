@@ -22,7 +22,7 @@
 **nf-core/larry** is a bioinformatics pipeline that determines the clonal composition of cells. Cells have been labeled with (a) LARRY barcode(s). Clones are cells that originate from the same LARRY labelled cel (belong to the same lineage). The pipeline requires 10x Chromium Single Cell data (GEX) and paired-end Illumina sequences of PCR-enriched LARRY labels (LARRY). It takes a samplesheet and FASTQ files as input 
 
 <p align="center">
-    <img src="docs/images/usage/workflow_diagram.svg" alt="nf-core/larry schematic workflow" width="70%"
+    <img src="docs/images/workflow_diagram.svg" alt="nf-core/larry schematic workflow" width="70%"
 </p>
 
 1. Cellranger count module (GEX) ([`cellranger_count`](https://nf-co.re/modules/cellranger_count/))
