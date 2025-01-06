@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 978.36 391.36">
+  <defs>
+    <style>
+      .cls-1 {
+        font-size: 12px;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        fill: #fff;
+      }
+
+      .cls-1, .cls-2, .cls-4, .cls-6 {
+        isolation: isolate;
+      }
+
+      .cls-1, .cls-2, .cls-4, .cls-7 {
+        font-family: MavenPro-Bold, 'Maven Pro';
+        font-variation-settings: 'wght' 700;
+        font-weight: 700;
+      }
+
+      .cls-8, .cls-9, .cls-10, .cls-3, .cls-11, .cls-12 {
+        stroke-miterlimit: 15.12;
+      }
+
+      .cls-8, .cls-9, .cls-10, .cls-11, .cls-12 {
+        fill: none;
+      }
+
+      .cls-8, .cls-10, .cls-12 {
+        stroke-width: 10px;
+      }
+
+      .cls-8, .cls-3 {
+        stroke: #000;
+      }
+
+      .cls-2 {
+        font-size: 11px;
+      }
+
+      .cls-9, .cls-10 {
+        stroke: #24b064;
+      }
+
+      .cls-9, .cls-11 {
+        stroke-width: 10px;
+      }
+
+      .cls-3 {
+        stroke-linecap: round;
+        stroke-width: 6px;
+      }
+
+      .cls-13 {
+        font-size: 22px;
+      }
+
+      .cls-13, .cls-14 {
+        font-family: MavenPro-SemiBold, 'Maven Pro';
+        font-variation-settings: 'wght' 600;
+        font-weight: 600;
+      }
+
+      .cls-4 {
+        font-size: 14px;
+      }
+
+      .cls-7 {
+        font-size: 34px;
+      }
+
+      .cls-15 {
+        fill-rule: evenodd;
+      }
+
+      .cls-14 {
+        font-size: 20px;
+      }
+
+      .cls-11, .cls-12 {
+        stroke: #3d95fd;
+      }
+
+      .cls-16 {
+        letter-spacing: -.07em;
+      }
+
+      .cls-17 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-18 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-19 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-20 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-21 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-22 {
+        letter-spacing: 0em;
+      }
+
+      .cls-23 {
+        font-family: Inter-Regular, Inter;
+        font-size: 16px;
+        font-variation-settings: 'opsz' 14, 'wght' 400;
+      }
+
+      .cls-24 {
+        letter-spacing: .01em;
+      }
+
+      .cls-25 {
+        letter-spacing: .02em;
+      }
+
+      .cls-26 {
+        letter-spacing: 0em;
+      }
+    </style>
+  </defs>
+  <path id="path1232-36-5-9-0-8" class="cls-10" d="M689.64,150.14v25.6c0,23.49-15.57,70.4-55,70.4h-20"/>
+  <path id="path1232-36-5-9-0-8-2" data-name="path1232-36-5-9-0-8" class="cls-12" d="M679.64,150.14v22.89c-.21,24.13-14.24,66.54-49.87,62.94h-18.13"/>
+  <g>
+    <path id="path2500-5-22-5-4-3" class="cls-9" d="M264.64,246.14h350"/>
+    <path id="path2500-5-22-5-4-4-0" class="cls-11" d="M264.64,236.14h350"/>
+  </g>
+  <path id="path1232-36-5-9-0-8-3" data-name="path1232-36-5-9-0-8" class="cls-10" d="M470.64,59.14h20c18.35,0,55,15.57,55,55v20"/>
+  <g>
+    <path id="path2500-5-22-5-4-3-2" data-name="path2500-5-22-5-4-3" class="cls-9" d="M235,182.16v-30"/>
+    <path id="path2500-5-22-5-4-4-0-2" data-name="path2500-5-22-5-4-4-0" class="cls-11" d="M225,182.16v-30"/>
+  </g>
+  <g id="g18488-3">
+    <path id="path6276-4-0" class="cls-5" d="M10,100.16v80h60v-60l-20-20H10Z"/>
+    <path id="path5862-3" d="M75,115.16c0-1-1-2-2-3l-17-15c-1-1-2-2-3.13-2H10c-3,0-5,2-5,5v80c0,3,2,5,5,5h60c3,0,5-2,5-5v-65ZM70,180.16H10v-80h40v18c0,1.2.77,2,2,2h18v60Z"/>
+    <path id="rect18347-6" class="cls-15" d="M5.18,130.16h69.63c2.87,0,5.18,1.88,5.18,4.21v21.58c0,2.33-2.31,4.21-5.18,4.21H5.18c-2.87,0-5.18-1.88-5.18-4.21v-21.58c0-2.33,2.31-4.21,5.18-4.21Z"/>
+    <g id="text18569-8" class="cls-6">
+      <text class="cls-4" transform="translate(5.8 150.37)"><tspan x="0" y="0">GEX fastq</tspan></text>
+    </g>
+  </g>
+  <g id="g18488-3-2" data-name="g18488-3">
+    <path id="path6276-4-0-2" data-name="path6276-4-0" class="cls-5" d="M379.64,11.14v80h60V31.14l-20-20h-40Z"/>
+    <path id="path5862-3-2" data-name="path5862-3" d="M444.64,26.14c0-1-1-2-2-3l-17-15c-1-1-2-2-3.13-2h-42.87c-3,0-5,2-5,5v80c0,3,2,5,5,5h60c3,0,5-2,5-5V26.14ZM439.64,91.14h-60V11.14h40v18c0,1.2.77,2,2,2h18v60Z"/>
+    <path id="rect18347-6-2" data-name="rect18347-6" class="cls-15" d="M374.82,41.14h69.63c2.87,0,5.18,1.88,5.18,4.21v21.58c0,2.33-2.31,4.21-5.18,4.21h-69.63c-2.87,0-5.18-1.88-5.18-4.21v-21.58c0-2.33,2.31-4.21,5.18-4.21Z"/>
+    <g id="text18569-8-2" data-name="text18569-8" class="cls-6">
+      <text class="cls-1" transform="translate(373.43 61.36)"><tspan x="0" y="0">LAR</tspan><tspan class="cls-16" x="23.46" y="0">R</tspan><tspan x="31.15" y="0">Y fastq</tspan></text>
+    </g>
+  </g>
+  <g>
+    <path id="path2500-5-22-5-4-3-3" data-name="path2500-5-22-5-4-3" class="cls-9" d="M117,151.16h700"/>
+    <path id="path2500-5-22-5-4-4-0-3" data-name="path2500-5-22-5-4-4-0" class="cls-11" d="M117,141.16h700"/>
+  </g>
+  <circle id="path3447-6-2-4" class="cls-3" cx="370" cy="340.16" r="10"/>
+  <path id="path2500-5-22-2-5" d="M105.27,130.67v30h10l15-15-15-15h0s-10,0-10,0Z"/>
+  <path id="path2500-5-22-2-5-2" data-name="path2500-5-22-2-5" d="M461.27,44.67v30h10l15-15-15-15h0s-10,0-10,0Z"/>
+  <text class="cls-13" transform="translate(10.14 340.29)"><tspan x="0" y="0">Legend</tspan></text>
+  <text class="cls-23" transform="translate(393.61 329.97)"><tspan x="0" y="0">Mu</tspan><tspan class="cls-24" x="23.91" y="0">l</tspan><tspan x="28.02" y="0">ti-output</tspan><tspan x="0" y="19.2">in</tspan><tspan class="cls-22" x="13.33" y="19.2">t</tspan><tspan x="18.41" y="19.2">e</tspan><tspan class="cls-25" x="27.73" y="19.2">r</tspan><tspan x="34.01" y="19.2">media</tspan><tspan class="cls-22" x="80.01" y="19.2">t</tspan><tspan x="85.09" y="19.2">e</tspan><tspan x="0" y="38.4">s</tspan><tspan class="cls-22" x="8.45" y="38.4">t</tspan><tspan x="13.52" y="38.4">ep</tspan></text>
+  <path id="path2500-5-22-2-5-3" data-name="path2500-5-22-2-5" d="M117.27,314.67v30h10l15-15-15-15h0s-10,0-10,0Z"/>
+  <text class="cls-23" transform="translate(148.4 334.8)"><tspan x="0" y="0">S</tspan><tspan class="cls-26" x="10.27" y="0">t</tspan><tspan x="15.58" y="0">a</tspan><tspan class="cls-25" x="24.56" y="0">r</tspan><tspan x="30.84" y="0">t</tspan></text>
+  <path id="path2500-5-22-2-7" class="cls-8" d="M124,357.16v30"/>
+  <text class="cls-23" transform="translate(149.95 367)"><tspan x="0" y="0">End</tspan><tspan x="0" y="19.2">S</tspan><tspan class="cls-22" x="10.27" y="19.2">t</tspan><tspan x="15.34" y="19.2">ep</tspan></text>
+  <g id="g17">
+    <path id="path2500-5-22-5" class="cls-9" d="M522.64,323.14h80"/>
+  </g>
+  <path id="path2500-5-22-5-4-4-0-4" data-name="path2500-5-22-5-4-4-0" class="cls-11" d="M522.64,364.14h80"/>
+  <text class="cls-23" transform="translate(623.04 328.79)"><tspan x="0" y="0">GEX + LAR</tspan><tspan class="cls-17" x="82.44" y="0">R</tspan><tspan x="92.35" y="0">Y </tspan><tspan class="cls-21" x="107.71" y="0">f</tspan><tspan x="113.38" y="0">as</tspan><tspan class="cls-22" x="130.81" y="0">t</tspan><tspan x="135.89" y="0">q</tspan></text>
+  <text class="cls-23" transform="translate(624.77 369.99)"><tspan x="0" y="0">GEX </tspan><tspan class="cls-21" x="36.97" y="0">f</tspan><tspan x="42.64" y="0">as</tspan><tspan class="cls-22" x="60.07" y="0">t</tspan><tspan x="65.15" y="0">q</tspan></text>
+  <text class="cls-7" transform="translate(5.23 28.34)"><tspan x="0" y="0">nf-co</tspan><tspan class="cls-20" x="87.01" y="0">r</tspan><tspan x="100.98" y="0">e/larry</tspan></text>
+  <circle id="path3447-6-2-4-2" data-name="path3447-6-2-4" class="cls-3" cx="230" cy="145.16" r="10"/>
+  <text class="cls-14" transform="translate(151.73 117.33)"><tspan x="0" y="0">cellranger_count</tspan></text>
+  <path id="path2500-5-22-2-7-2" data-name="path2500-5-22-2-7" class="cls-8" d="M211,340.16h30"/>
+  <text class="cls-23" transform="translate(248.4 329.8)"><tspan x="0" y="0">Single output</tspan><tspan x="0" y="19.2">In</tspan><tspan class="cls-22" x="13.75" y="19.2">t</tspan><tspan x="18.83" y="19.2">e</tspan><tspan class="cls-25" x="28.16" y="19.2">r</tspan><tspan x="34.43" y="19.2">media</tspan><tspan class="cls-22" x="80.43" y="19.2">t</tspan><tspan x="85.51" y="19.2">e</tspan><tspan x="0" y="38.4">S</tspan><tspan class="cls-22" x="10.27" y="38.4">t</tspan><tspan x="15.34" y="38.4">ep</tspan></text>
+  <path id="path2500-5-22-2-7-3" data-name="path2500-5-22-2-7" class="cls-8" d="M215,180.16h30"/>
+  <g id="g18488-3-3" data-name="g18488-3">
+    <path id="path6276-4-0-3" data-name="path6276-4-0" class="cls-5" d="M200.64,196.14v80h60v-60l-20-20h-40Z"/>
+    <path id="path5862-3-3" data-name="path5862-3" d="M265.64,211.14c0-1-1-2-2-3l-17-15c-1-1-2-2-3.13-2h-42.87c-3,0-5,2-5,5v80c0,3,2,5,5,5h60c3,0,5-2,5-5v-65ZM260.64,276.14h-60v-80h40v18c0,1.2.77,2,2,2h18v60Z"/>
+    <path id="rect18347-6-3" data-name="rect18347-6" class="cls-15" d="M195.82,226.14h69.63c2.87,0,5.18,1.88,5.18,4.21v21.58c0,2.33-2.31,4.21-5.18,4.21h-69.63c-2.87,0-5.18-1.88-5.18-4.21v-21.58c0-2.33,2.31-4.21,5.18-4.21Z"/>
+    <g id="text18569-8-3" data-name="text18569-8" class="cls-6">
+      <text class="cls-2" transform="translate(196.43 246.36)"><tspan x="0" y="0">Cell ba</tspan><tspan class="cls-19" x="35.21" y="0">r</tspan><tspan x="39.73" y="0">codes</tspan></text>
+    </g>
+  </g>
+  <circle id="path3447-6-2-4-3" data-name="path3447-6-2-4" class="cls-3" cx="374.64" cy="145.14" r="10"/>
+  <text class="cls-14" transform="translate(303.13 180.47)"><tspan x="0" y="0">bamtofastq10x</tspan></text>
+  <circle id="path3447-6-2-4-4" data-name="path3447-6-2-4" class="cls-3" cx="544.64" cy="145.14" r="10"/>
+  <text class="cls-14" transform="translate(503.06 180.57)"><tspan x="0" y="0">cutadapt</tspan></text>
+  <circle id="path3447-6-2-4-5" data-name="path3447-6-2-4" class="cls-3" cx="682.64" cy="145.14" r="10"/>
+  <text class="cls-14" transform="translate(603.17 117.57)"><tspan x="0" y="0">umitools_extract</tspan></text>
+  <path id="path2500-5-22-2-7-4" data-name="path2500-5-22-2-7" class="cls-8" d="M816.64,132.14v30"/>
+  <text class="cls-14" transform="translate(829.32 151.73)"><tspan x="0" y="0">gather_ba</tspan><tspan class="cls-18" x="96.5" y="0">r</tspan><tspan x="104.3" y="0">code</tspan></text>
+</svg>

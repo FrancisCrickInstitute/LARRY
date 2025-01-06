@@ -1,7 +1,7 @@
 <h1>
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/nf-core-larry_logo_2_dark.png">
-    <img alt="nf-core/larry" src="docs/images/nf-core-larry_logo_2_light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/nf-core-larry_logo_2_dark.svg">
+    <img alt="nf-core/larry" src="docs/images/nf-core-larry_logo_2_light.svg">
   </picture>
 </h1>
 
@@ -21,8 +21,9 @@
 
 **nf-core/larry** is a bioinformatics pipeline that determines the clonal composition of cells. Cells have been labeled with (a) LARRY barcode(s). Clones are cells that originate from the same LARRY labelled cel (belong to the same lineage). The pipeline requires 10x Chromium Single Cell data (GEX) and paired-end Illumina sequences of PCR-enriched LARRY labels (LARRY). It takes a samplesheet and FASTQ files as input 
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
+<p align="center">
+    <img src="docs/images/usage/workflow_diagram.svg" alt="nf-core/larry schematic workflow" width="70%"
+</p>
 
 1. Cellranger count module (GEX) ([`cellranger_count`](https://nf-co.re/modules/cellranger_count/))
 2. Obtain the unmapped reads (GEX) ([`samtools_view`](https://nf-co.re/modules/samtools_view/))
