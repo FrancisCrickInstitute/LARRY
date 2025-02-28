@@ -1,0 +1,33 @@
+{
+    "fastq_size [fastq.gz]": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": true
+                        },
+                        "fastq_size.fastq.gz:md5,1b2659ef49d75f0746108c07023f92e1",
+                        "1625\n"
+                    ]
+                ],
+                "outs": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": true
+                        },
+                        "fastq_size.fastq.gz:md5,1b2659ef49d75f0746108c07023f92e1",
+                        "1625\n"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.8.4",
+            "nextflow": "24.04.2"
+        },
+        "timestamp": "2025-01-08T19:41:16.811937425"
+    }
+}

@@ -10,13 +10,21 @@
 
 ## Pipeline tools
 
-- [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+- [Cell Ragner](https://www.10xgenomics.com/support/software/cell-ranger/latest)
 
-  > Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].
+  > 10x Genomics Cell Ranger v8.0.0
 
-- [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
+- [Samtools](https://academic.oup.com/gigascience/article/10/2/giab008/6137722)
 
-  > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
+  > Petr Danecek, James K Bonfield, Jennifer Liddle, John Marshall, Valeriu Ohan, Martin O Pollard, Andrew Whitwham, Thomas Keane, Shane A McCarthy, Robert M Davies, Heng Li. Twelve years of SAMtools and BCFtools. GigaScience. Volume 10, Issue 2, February 2021, giab008, https://doi.org/10.1093/gigascience/giab008
+
+- [Cutadapt](https://journal.embnet.org/index.php/embnetjournal/article/view/200)
+
+  > Marcel Martin. Cutadapt Removes Adapter Sequences From High-Throughput Sequencing Reads. EMBnet.journal. Volume 17, No 1, DOI: https://doi.org/10.14806/ej.17.1.200
+
+- [UMI-tools](https://genome.cshlp.org/content/early/2017/01/18/gr.209601.116.abstract)
+
+  > Tom Sean Smith, Andreas Heger, Ian Sudbery. UMI-tools: Modelling sequencing errors in Unique Molecular Identifiers to improve quantification accuracy. Genome Research. 2017. 27:491–499
 
 ## Software packaging/containerisation tools
 

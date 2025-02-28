@@ -45,7 +45,6 @@ workflow LARRY {
     //Filter 10x data
     //
 
-
     ch_samplesheet
         .filter { it[0].id.contains('GEX') }
         .set{ch_samplesheet_gex}

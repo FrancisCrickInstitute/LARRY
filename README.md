@@ -58,6 +58,7 @@ sample1_LARRY_1,AEG588A3_S1_L002_R1_001.fastq.gz,AEG588A3_S1_L002_R2_001.fastq.g
 ```
 
 Each row represents a pair of fastq files (paired end).
+Be aware! For the LARRY libraries: The first read needs to be the LARRY barcode and the second read the CELL + UMI barcode.
 
 The sample name should be structured as follows:
 1. Sample name
@@ -66,16 +67,20 @@ The sample name should be structured as follows:
 
 These three elements should be connected by an "_"
 
+Clone the nextflow pipeline repository, go into the directory and switch to the dev branch.
 
-Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
+```bash
+git clone git@github.com:FrancisCrickInstitute/LARRY.git
+cd LARRY/
+git switch dev
+```
+Being in the nextflow pipeline directory, run the pipeline like this:
 
 ```bash
 nextflow run nf-core/larry \
    --input <SAMPLESHEET> \
    --outdir <OUTDIR> \
-   --reference <CELLRANGER REFERENCE>
+   --cellranger_reference <CELLRANGER REFERENCE>
 ```
 
 > [!WARNING]

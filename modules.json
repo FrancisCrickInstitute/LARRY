@@ -25,6 +25,21 @@
                         "git_sha": "82024cf6325d2ee194e7f056d841ecad2f6856e9",
                         "installed_by": ["modules"]
                     },
+                    "cellranger/mkfastq": {
+                        "branch": "master",
+                        "git_sha": "f7d2d43086b48d3cedd9e2df52bf098ee5a50542",
+                        "installed_by": ["modules"]
+                    },
+                    "cellranger/mkgtf": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
+                    "cellranger/mkref": {
+                        "branch": "master",
+                        "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+                        "installed_by": ["modules"]
+                    },
                     "cutadapt": {
                         "branch": "master",
                         "git_sha": "6618151ed69274863dc6fe6d2920afa90abaca1f",

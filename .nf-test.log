@@ -1,0 +1,24 @@
+Feb-28 09:50:49.431 [main] INFO  com.askimed.nf.test.App - nf-test 0.8.4
+Feb-28 09:50:49.445 [main] INFO  com.askimed.nf.test.App - Arguments: [test, modules/nf-core/cellranger/mkref/tests/main.nf.test]
+Feb-28 09:50:52.057 [main] INFO  com.askimed.nf.test.App - Nextflow Version: 24.04.2
+Feb-28 09:50:52.058 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Load config from file /nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/nf-test.config...
+Feb-28 09:50:52.316 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Detected 1 test files.
+Feb-28 09:50:52.492 [main] INFO  com.askimed.nf.test.config.FileStaging - Copy directory '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/bin' to '/camp/home/depottj/scratch/depottj/projects/briscoej/giulia.boezio/nf-core-larry/nf-test/tests/76486c23f5be82f1f7a7c6240960ac07/meta/bin'
+Feb-28 09:50:52.494 [main] WARN  com.askimed.nf.test.config.FileStaging - File '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/lib' not found. Ignore it.
+Feb-28 09:50:52.495 [main] INFO  com.askimed.nf.test.config.FileStaging - Copy directory '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/assets' to '/camp/home/depottj/scratch/depottj/projects/briscoej/giulia.boezio/nf-core-larry/nf-test/tests/76486c23f5be82f1f7a7c6240960ac07/meta/assets'
+Feb-28 09:50:52.504 [main] DEBUG com.askimed.nf.test.core.AbstractTest - Stage 0 user provided files...
+Feb-28 09:50:52.507 [main] INFO  com.askimed.nf.test.config.FileStaging - Copy directory '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/bin' to '/camp/home/depottj/scratch/depottj/projects/briscoej/giulia.boezio/nf-core-larry/nf-test/tests/4510e501b809eacd4c3d891c2ea0663d/meta/bin'
+Feb-28 09:50:52.508 [main] WARN  com.askimed.nf.test.config.FileStaging - File '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/lib' not found. Ignore it.
+Feb-28 09:50:52.509 [main] INFO  com.askimed.nf.test.config.FileStaging - Copy directory '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/assets' to '/camp/home/depottj/scratch/depottj/projects/briscoej/giulia.boezio/nf-core-larry/nf-test/tests/4510e501b809eacd4c3d891c2ea0663d/meta/assets'
+Feb-28 09:50:52.515 [main] DEBUG com.askimed.nf.test.core.AbstractTest - Stage 0 user provided files...
+Feb-28 09:50:52.515 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Started test plan
+Feb-28 09:50:52.515 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'Test Process CELLRANGER_MKREF' from file '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/modules/nf-core/cellranger/mkref/tests/main.nf.test'.
+Feb-28 09:50:52.515 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '76486c23: homo_sapiens - reference'. type: com.askimed.nf.test.lang.process.ProcessTest
+Feb-28 09:51:49.388 [main] DEBUG com.askimed.nf.test.lang.extensions.SnapshotFile - Load snapshots from file '/nemo/stp/babs/working/depottj/projects/briscoej/giulia.boezio/nf-core-larry/modules/nf-core/cellranger/mkref/tests/main.nf.test.snap'
+Feb-28 09:51:49.470 [main] DEBUG com.askimed.nf.test.lang.extensions.Snapshot - Snapshots 'homo_sapiens - reference' match.
+Feb-28 09:51:49.470 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '76486c23: homo_sapiens - reference' finished. status: PASSED
+Feb-28 09:51:49.472 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '4510e501: homo_sapiens - reference - stub'. type: com.askimed.nf.test.lang.process.ProcessTest
+Feb-28 09:52:39.202 [main] DEBUG com.askimed.nf.test.lang.extensions.Snapshot - Snapshots 'homo_sapiens - reference - stub' match.
+Feb-28 09:52:39.203 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '4510e501: homo_sapiens - reference - stub' finished. status: PASSED
+Feb-28 09:52:39.203 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Testsuite 'Test Process CELLRANGER_MKREF' finished. snapshot file: true, skipped tests: false, failed tests: false
+Feb-28 09:52:39.204 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Executed 2 tests. 0 tests failed. Done!
