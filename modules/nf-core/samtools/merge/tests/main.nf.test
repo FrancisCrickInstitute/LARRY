@@ -33,7 +33,8 @@ nextflow_process {
                 { assert process.success },
                 { assert snapshot(file(process.out.bam[0][1]).name).match("bams_bam") },
                 { assert snapshot(process.out.cram).match("bams_cram") },
-                { assert snapshot(file(process.out.csi[0][1]).name).match("bams_csi") },
+                //{ assert snapshot(file(process.out.csi[0][1]).name).match("bams_csi") },
+                { assert snapshot(process.out.csi).match("bams_csi") },
                 { assert snapshot(process.out.crai).match("bams_crai") },
                 { assert snapshot(process.out.versions).match("bams_versions") }
             )
@@ -69,7 +70,8 @@ nextflow_process {
                 { assert process.success },
                 { assert snapshot(file(process.out.cram[0][1]).name).match("crams_cram") },
                 { assert snapshot(process.out.bam).match("crams_bam") },
-                { assert snapshot(file(process.out.crai[0][1]).name).match("crams_crai") },
+                //{ assert snapshot(file(process.out.crai[0][1]).name).match("crams_crai") },
+                { assert snapshot(process.out.crai).match("crams_crai") },
                 { assert snapshot(process.out.csi).match("crams_csi") },
                 { assert snapshot(process.out.versions).match("crams_versions") }
             )
@@ -128,7 +130,8 @@ nextflow_process {
                 { assert process.success },
                 { assert snapshot(file(process.out.bam[0][1]).name).match("bams_stub_bam") },
                 { assert snapshot(process.out.cram).match("bams_stub_cram") },
-                { assert snapshot(file(process.out.csi[0][1]).name).match("bams_stub_csi") },
+                //{ assert snapshot(file(process.out.csi[0][1]).name).match("bams_stub_csi") },
+                { assert snapshot(process.out.csi).match("bams_stub_csi") },
                 { assert snapshot(process.out.crai).match("bams_stub_crai") },
                 { assert snapshot(process.out.versions).match("bams_stub_versions") }
             )

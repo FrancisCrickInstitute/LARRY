@@ -22,12 +22,7 @@
                     },
                     "cellranger/count": {
                         "branch": "master",
-                        "git_sha": "82024cf6325d2ee194e7f056d841ecad2f6856e9",
-                        "installed_by": ["modules"]
-                    },
-                    "cellranger/mkfastq": {
-                        "branch": "master",
-                        "git_sha": "f7d2d43086b48d3cedd9e2df52bf098ee5a50542",
+                        "git_sha": "0e9cb409c32d3ec4f0d3804588e4778971c09b7e",
                         "installed_by": ["modules"]
                     },
                     "cellranger/mkgtf": {
@@ -62,7 +57,7 @@
                     },
                     "samtools/merge": {
                         "branch": "master",
-                        "git_sha": "04fbbc7c43cebc0b95d5b126f6d9fe4effa33519",
+                        "git_sha": "b13f07be4c508d6ff6312d354d09f2493243e208",
                         "installed_by": ["modules"]
                     },
                     "samtools/sort": {

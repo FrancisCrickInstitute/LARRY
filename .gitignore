@@ -11,3 +11,7 @@ output/
 singularity/
 cellranger_reference
 input.csv
+data/
+tests/
+troubleshoot_script/
+.ipynb_checkpoints/

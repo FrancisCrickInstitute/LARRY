@@ -109,6 +109,7 @@ workflow LARRY {
 
     BAMTOFASTQ10X(SAMTOOLS_SORT.out.bam)
 
+    BAMTOFASTQ10X.out.fastq.view()
 
     //
     //Combine LARRY and 10x data again

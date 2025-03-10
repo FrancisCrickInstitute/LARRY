@@ -173,10 +173,6 @@ for (CB, LARRY), UMI in CB_LARRY_group.items():
 # Convert list to a DataFrame with a single row
 df = pd.DataFrame([all_larry_counts])
 
-# Write DataFrame to CSV
-df.to_csv("${meta.id}_" + "numbers_single_row.csv", index=False, header=False)
-
-
 #Determine the count cutoff
 def determine_cutoff(counts , epsilon = 0.01):
 
@@ -330,17 +326,8 @@ for bc_group in clustered_bcs:
     i += 1
 
 
-#Calculate subgroup averages
-def sub_group_filtering(dataset , group_list , sub_group_list):
-    dataset.loc[:,"UMI_avg"] = dataset.groupby(by = group_list)["count"].transform(lambda x : x.mean()).to_frame()
-    dataset.loc[:,"UMI_avg_subgroup"] = dataset.groupby(by = sub_group_list)["count"].transform(lambda x : x.mean()).to_frame() 
-    
-    return dataset
-
 #Calculate for the clones with different LARRY labels
 clonal_group_info_1 = pd.DataFrame(clonal_groups)
-clonal_group_info_1 = sub_group_filtering(clonal_group_info_1 , ["clonal_id"] , ["clonal_id","LARRY_barcode"])
-clonal_group_final_1 = clonal_group_info_1.drop(columns = ['UMI_avg', 'UMI_avg_subgroup'])
 
 def cluster_merge(dataset , cutoff_value = 0.5) :
 
@@ -348,11 +335,12 @@ def cluster_merge(dataset , cutoff_value = 0.5) :
 
     #Create clone dictionaries with keys being the clone name and the values the cells.
     list_of_clones = dataset.groupby('clonal_id')['cell_id'].apply(list).apply(list).tolist()
-
     dict_clones = {str(number): clone for number , clone in enumerate(list_of_clones)}
 
+    #Initiate matrix to calculate pairwise jaccard indices
     jaccard_array = np.ones((len(list_of_clones), len(list_of_clones)))
 
+    #C
     jaccard_final_dict = {}
 
     while np.sum(jaccard_array) > 0:
@@ -410,14 +398,21 @@ def cluster_merge(dataset , cutoff_value = 0.5) :
     cells_in_one_clone_idx = new_clones_flat_df.groupby("Cell").filter(lambda x: len(x) == 1).index
     new_clones_flat_df = new_clones_flat_df.loc[cells_in_one_clone_idx]
     new_clones = pd.merge(dataset , new_clones_flat_df , how = "right" , left_on = "cell_id", right_on = "Cell")
-    new_clones = new_clones.drop(['clonal_id',"cell_id","LARRY_barcode","count"], axis=1)
     new_clones = new_clones.drop_duplicates()
+    new_clones = new_clones.groupby(["Clone" , "Cell"])["count"].max().reset_index(name = "Count")
 
     return new_clones
 
-clone_group_merged = cluster_merge(clonal_group_final_1 , cutoff_value = 0.5)
+clone_group_merged = cluster_merge(clonal_group_info_1 , cutoff_value = 0.5)
 
+clone_group_merged["Cell_Count"] = [(cell , count) for cell, count in zip(clone_group_merged["Cell"] , clone_group_merged["Count"])]
+
+clone_group_merged_list = [sorted(list(values["Cell_Count"])) for _ , values in clone_group_merged.groupby("Clone")]
+clone_group_merged_combo = [("clone_" + str(number) , el[0] , el[1]) for number, element in enumerate(sorted(clone_group_merged_list)) for el in element]
+clone_group_merged_df = pd.DataFrame(clone_group_merged_combo , columns = ["Clone" , "Cell" , "Count"])
+
+#CSV output file name
 output_name_jaccard = "${meta.id}_" + str(cutoff) + "_clone_output.csv"
 
 #Write out the dataframe
-clone_group_merged.to_csv(output_name_jaccard, index = False)
+clone_group_merged_df.to_csv(output_name_jaccard, index = False)

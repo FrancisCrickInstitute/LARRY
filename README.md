@@ -77,10 +77,10 @@ git switch dev
 Being in the nextflow pipeline directory, run the pipeline like this:
 
 ```bash
-nextflow run nf-core/larry \
+nextflow main.nf \
    --input <SAMPLESHEET> \
    --outdir <OUTDIR> \
-   --cellranger_reference <CELLRANGER REFERENCE>
+   --cellranger_reference <CELLRANGER REFERENCE (absolute path)>
 ```
 
 > [!WARNING]
