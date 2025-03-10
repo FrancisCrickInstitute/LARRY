@@ -7,10 +7,6 @@ nextflow_process {
     test("test_LARRY.umi_extract_2.fastq.gz [fastq.gz]") {
 
         when {
-            params {
-                // define parameters here. Example:
-                // outdir = "tests/results"
-            }
             process {
                 """
                 // define inputs of the process here. Example:

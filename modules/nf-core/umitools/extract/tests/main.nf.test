@@ -14,8 +14,9 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = [ [ id:'test', single_end:true ], // meta map
-                    [ file(params.modules_testdata_base_path + "genomics/sarscov2/illumina/fastq/test_1.fastq.gz", checkIfExists: true) ]
+                input[0] = [ [ id:'test', single_end:false ], // meta map
+                    [ file("${projectDir}/data/fastq/cutadapt_lf_test_LARRY_2.trim.fastq.gz", checkIfExists: true) , file("${projectDir}/data/fastq/cutadapt_lf_test_LARRY_1.trim.fastq.gz", checkIfExists: true) ],
+                    [file("${projectDir}/data/tsv/test_GEX_unique_test_GEX.tsv", checkIfExists: true)]
                 ]
                 """
             }

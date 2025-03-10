@@ -20,10 +20,6 @@ include { UNIQUE } from '../modules/local/unique/main'
 include { UMITOOLS_EXTRACT                   } from '../modules/nf-core/umitools/extract/main'
 include { FASTQ_SIZE } from '../modules/local/fastq_size/main'
 include { GATHER_BARCODE                   } from '../modules/local/gather_barcode/main'
-include { paramsSummaryMap                   } from 'plugin/nf-validation'
-include { paramsSummaryMultiqc               } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML             } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText             } from '../subworkflows/local/utils_nfcore_larry_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,7 +35,6 @@ workflow LARRY {
     main:
 
     ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
 
     //
     //Filter 10x data
@@ -108,8 +103,6 @@ workflow LARRY {
     //
 
     BAMTOFASTQ10X(SAMTOOLS_SORT.out.bam)
-
-    BAMTOFASTQ10X.out.fastq.view()
 
     //
     //Combine LARRY and 10x data again
@@ -291,6 +284,8 @@ workflow LARRY {
     //
     //Run UMITOOLS script
     //
+
+    UMITOOLS_EXTRACT_input.view()
 
     UMITOOLS_EXTRACT(
         UMITOOLS_EXTRACT_input
