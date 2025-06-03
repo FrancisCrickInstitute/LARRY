@@ -70,9 +70,21 @@
                     "description": "If True, both GEX and LARRY libraries are available. If False, only GEX is available.",
                     "fa_icon": "fas fa-flask",
                     "default": true
+                },
+                "epsilon": {
+                    "type": "number",
+                    "description": "Parameter to determine the LARRY expression level cutoff.",
+                    "fa_icon": "fas fa-flask",
+                    "default": 0.01
+                },
+                "jaccard_cutoff": {
+                    "type": "number",
+                    "description": "Cluster merge parameter.",
+                    "fa_icon": "fas fa-flask",
+                    "default": 0.5
                 }
             },
-            "required": ["cellranger_reference", "ham_larry", "ham_umi"]
+            "required": ["cellranger_reference", "ham_larry", "ham_umi" , "gex_and_larry" , "epsilon" , "jaccard_cutoff"]
         },
         "institutional_config_options": {
             "title": "Institutional config options",

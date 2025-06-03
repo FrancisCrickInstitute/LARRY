@@ -208,7 +208,7 @@ def determine_cutoff(counts , epsilon = 0.01):
         
     return comparison
 
-cutoff = determine_cutoff(all_larry_counts , epsilon = 0.01)
+cutoff = determine_cutoff(all_larry_counts , epsilon = float(${params.epsilon}))
 
 #Make figure of cutoffs and mean of shifted count data
 #Calculate the mean of shifted count data
@@ -403,7 +403,7 @@ def cluster_merge(dataset , cutoff_value = 0.5) :
 
     return new_clones
 
-clone_group_merged = cluster_merge(clonal_group_info_1 , cutoff_value = 0.5)
+clone_group_merged = cluster_merge(clonal_group_info_1 , cutoff_value = float(${params.jaccard_cutoff}))
 
 clone_group_merged["Cell_Count"] = [(cell , count) for cell, count in zip(clone_group_merged["Cell"] , clone_group_merged["Count"])]
 

@@ -285,8 +285,6 @@ workflow LARRY {
     //Run UMITOOLS script
     //
 
-    UMITOOLS_EXTRACT_input.view()
-
     UMITOOLS_EXTRACT(
         UMITOOLS_EXTRACT_input
     )
@@ -300,7 +298,7 @@ workflow LARRY {
     FASTQ_SIZE(COUNT_FASTQ_input)
 
     FASTQ_SIZE.out.outs
-        .filter{v -> v[2].toInteger() > 1}
+        .filter{v -> v[2].toLong() > 1}
         .map{meta , fastq , file_size -> tuple(meta , fastq)}
         .set{GATHER_BARCODE_input}
 
