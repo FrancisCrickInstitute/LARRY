@@ -151,7 +151,12 @@ for (CB, UMI), LARRY in CB_UMI_group.items():
             CB_UMI_group_filtered.append(Read(cell_barcode = CB, umi = UMI, LARRY_barcode = larcs[0].main_seq))
         elif len(larcs) != 1:
             more_larry_than_expect.append(Read(cell_barcode = CB, umi = UMI, LARRY_barcode = larcs))
-            
+
+step3_excluded = pd.DataFrame([
+    {"step": "ambiguous_LARRY_barcode", "cell_barcode": r.cell_barcode}
+    for r in more_larry_than_expect
+]).drop_duplicates()
+
 #Group the cell_barcodes and the LARRY_barcodes together to measure the umi expression
 CB_LARRY_group = defaultdict(list)
 for read in CB_UMI_group_filtered:
@@ -272,6 +277,11 @@ plt.savefig("${meta.id}_" + str(cutoff) + "_mean_shifted_count_data.png")
 
 #Remove LARRY barcodes that are below the treshhold.
 cb_larry_counts_filtered = [el for el in cb_larry_counts if el.count >= cutoff]
+
+step4_excluded = pd.DataFrame([
+    {"step": "low_UMI_count", "cell_barcode": el.cell_barcode}
+    for el in cb_larry_counts if el.count < cutoff
+]).drop_duplicates()
 
 #Filter based on minimum larry umi parameter
 cell_filtered_df = pd.DataFrame(cb_larry_counts_filtered)
@@ -405,6 +415,11 @@ def cluster_merge(dataset , cutoff_value = 0.5) :
 
 clone_group_merged = cluster_merge(clonal_group_info_1 , cutoff_value = float(${params.jaccard_cutoff}))
 
+step5_excluded = pd.DataFrame({
+    "step": "ambiguous_clone_assignment",
+    "cell_barcode": list(set(clonal_group_info_1["cell_id"]) - set(clone_group_merged["Cell"]))
+})
+
 clone_group_merged["Cell_Count"] = [(cell , count) for cell, count in zip(clone_group_merged["Cell"] , clone_group_merged["Count"])]
 
 clone_group_merged_list = [sorted(list(values["Cell_Count"])) for _ , values in clone_group_merged.groupby("Clone")]
@@ -416,3 +431,13 @@ output_name_jaccard = "${meta.id}_" + str(cutoff) + "_clone_output.csv"
 
 #Write out the dataframe
 clone_group_merged_df.to_csv(output_name_jaccard, index = False)
+
+#QC exclusion outputs
+qc_excluded = pd.concat([step3_excluded, step4_excluded, step5_excluded], ignore_index=True)
+qc_excluded.insert(0, "sample_id", "${meta.id}")
+
+qc_summary = qc_excluded.groupby(["sample_id", "step"])["cell_barcode"].nunique().reset_index()
+qc_summary.columns = ["sample_id", "step", "n_excluded_cell_barcodes"]
+
+qc_excluded.to_csv("${meta.id}_" + str(cutoff) + "_qc_exclusions.csv", index=False)
+qc_summary.to_csv("${meta.id}_" + str(cutoff) + "_qc_summary.csv", index=False)
