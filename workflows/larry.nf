@@ -220,6 +220,16 @@ workflow LARRY {
                     .set{barcodes}
 
     //
+    // Filtered barcodes passed to GATHER_BARCODE for QC filtering (does not affect UMITOOLS whitelist)
+    //
+
+    CELLRANGER_COUNT.out.outs
+                    .map{meta, fles ->
+                        def modifiedMetaId = meta.id.substring(0, meta.id.lastIndexOf('_'))
+                        tuple(modifiedMetaId, fles.find { it.toString().contains("filtered_feature_bc_matrix/barcodes") })}
+                    .set{filtered_barcodes_for_qc}
+
+    //
     //Gunzip the barcodes
     //
 
@@ -305,9 +315,15 @@ workflow LARRY {
     //
     //Gather the barcode: at some point I need to implement that LARRY and 10X library are combined together
     //
-    
+
+    GATHER_BARCODE_input
+        .map{ meta, fastq -> tuple(meta.id, meta, fastq)}
+        .combine(filtered_barcodes_for_qc, by: 0)
+        .map{ sample_id, meta, fastq, bc -> tuple(meta, fastq, bc)}
+        .set{GATHER_BARCODE_input_with_barcodes}
+
     GATHER_BARCODE(
-        GATHER_BARCODE_input
+        GATHER_BARCODE_input_with_barcodes
         )
 
 

@@ -433,8 +433,21 @@ output_name_jaccard = "${meta.id}_" + str(cutoff) + "_clone_output.csv"
 clone_group_merged_df.to_csv(output_name_jaccard, index = False)
 
 #QC exclusion outputs
+
+# Load filtered CellRanger barcodes (~real cells only)
+import gzip
+with gzip.open("${filtered_barcodes}", "rt") as f:
+    real_cells = set(line.strip().split('-')[0] for line in f if line.strip())
+
+# Fix step5 format: it stores cell_id (sample_id.barcode) instead of raw barcode
+if not step5_excluded.empty:
+    step5_excluded["cell_barcode"] = step5_excluded["cell_barcode"].str.split(".").str[-1]
+
 qc_excluded = pd.concat([step3_excluded, step4_excluded, step5_excluded], ignore_index=True)
 qc_excluded.insert(0, "sample_id", "${meta.id}")
+
+# Keep only exclusions for real CellRanger-called cells
+qc_excluded = qc_excluded[qc_excluded["cell_barcode"].isin(real_cells)]
 
 qc_summary = qc_excluded.groupby(["sample_id", "step"])["cell_barcode"].nunique().reset_index()
 qc_summary.columns = ["sample_id", "step", "n_excluded_cell_barcodes"]
