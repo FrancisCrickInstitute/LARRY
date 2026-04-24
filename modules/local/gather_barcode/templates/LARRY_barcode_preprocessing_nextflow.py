@@ -278,9 +278,10 @@ plt.savefig("${meta.id}_" + str(cutoff) + "_mean_shifted_count_data.png")
 #Remove LARRY barcodes that are below the treshhold.
 cb_larry_counts_filtered = [el for el in cb_larry_counts if el.count >= cutoff]
 
+cells_with_passing = set(el.cell_barcode for el in cb_larry_counts if el.count >= cutoff)
 step4_excluded = pd.DataFrame([
     {"step": "low_UMI_count", "cell_barcode": el.cell_barcode}
-    for el in cb_larry_counts if el.count < cutoff
+    for el in cb_larry_counts if el.count < cutoff and el.cell_barcode not in cells_with_passing
 ]).drop_duplicates()
 
 #Filter based on minimum larry umi parameter
@@ -436,8 +437,13 @@ clone_group_merged_df.to_csv(output_name_jaccard, index = False)
 
 # Load filtered CellRanger barcodes (~real cells only)
 import gzip
-with gzip.open("${filtered_barcodes}", "rt") as f:
-    real_cells = set(line.strip().split('-')[0] for line in f if line.strip())
+real_cells = set()
+for bc_file in "${filtered_barcodes}".split():
+    with gzip.open(bc_file, "rt") as f:
+        for line in f:
+            bc = line.strip()
+            if bc:
+                real_cells.add(bc.split('-')[0])
 
 # Fix step5 format: it stores cell_id (sample_id.barcode) instead of raw barcode
 if not step5_excluded.empty:

@@ -225,8 +225,10 @@ workflow LARRY {
 
     CELLRANGER_COUNT.out.outs
                     .map{meta, fles ->
-                        def modifiedMetaId = meta.id.substring(0, meta.id.lastIndexOf('_'))
-                        tuple(modifiedMetaId, fles.find { it.toString().contains("filtered_feature_bc_matrix/barcodes") })}
+                        def gexId  = meta.id.substring(0, meta.id.lastIndexOf('_'))  // BOE7075A4_GEX_1 -> BOE7075A4_GEX
+                        def baseId = gexId.substring(0, gexId.lastIndexOf('_'))      // BOE7075A4_GEX   -> BOE7075A4
+                        tuple(baseId, fles.find { it.toString().contains("filtered_feature_bc_matrix/barcodes") })}
+                    .groupTuple()
                     .set{filtered_barcodes_for_qc}
 
     //
@@ -317,9 +319,9 @@ workflow LARRY {
     //
 
     GATHER_BARCODE_input
-        .map{ meta, fastq -> tuple(meta.id, meta, fastq)}
+        .map{ meta, fastq -> tuple(meta.id.substring(0, meta.id.lastIndexOf('_')), meta, fastq)}
         .combine(filtered_barcodes_for_qc, by: 0)
-        .map{ sample_id, meta, fastq, bc -> tuple(meta, fastq, bc)}
+        .map{ sample_id, meta, fastq, bc_list -> tuple(meta, fastq, bc_list)}
         .set{GATHER_BARCODE_input_with_barcodes}
 
     GATHER_BARCODE(
