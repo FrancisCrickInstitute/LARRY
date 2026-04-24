@@ -3,7 +3,7 @@ process GATHER_BARCODE {
     label 'process_medium'
 
     input:
-    tuple val(meta), path(fastq), path(filtered_barcodes)
+    tuple val(meta), path(fastq), path(filtered_barcodes, stageAs: 'barcodes?.tsv.gz')
 
     output:
     tuple val(meta), file("*.png"), path("*_clone_output.csv"), emit: outs
