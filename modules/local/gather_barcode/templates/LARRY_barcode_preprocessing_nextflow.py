@@ -455,6 +455,10 @@ qc_excluded.insert(0, "sample_id", "${meta.id}")
 # Keep only exclusions for real CellRanger-called cells
 qc_excluded = qc_excluded[qc_excluded["cell_barcode"].isin(real_cells)]
 
+# Remove cells that got a valid clone assignment — they are not truly excluded
+clone_barcodes = set(cell.split('.')[-1] for cell in clone_group_merged_df['Cell'])
+qc_excluded = qc_excluded[~qc_excluded["cell_barcode"].isin(clone_barcodes)]
+
 qc_summary = qc_excluded.groupby(["sample_id", "step"])["cell_barcode"].nunique().reset_index()
 qc_summary.columns = ["sample_id", "step", "n_excluded_cell_barcodes"]
 
