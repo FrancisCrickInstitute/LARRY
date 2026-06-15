@@ -151,7 +151,14 @@ for (CB, UMI), LARRY in CB_UMI_group.items():
             CB_UMI_group_filtered.append(Read(cell_barcode = CB, umi = UMI, LARRY_barcode = larcs[0].main_seq))
         elif len(larcs) != 1:
             more_larry_than_expect.append(Read(cell_barcode = CB, umi = UMI, LARRY_barcode = larcs))
-            
+
+n_step3_umi_groups = len(more_larry_than_expect)
+
+step3_excluded = pd.DataFrame([
+    {"step": "ambiguous_LARRY_barcode", "cell_barcode": r.cell_barcode}
+    for r in more_larry_than_expect
+]).drop_duplicates()
+
 #Group the cell_barcodes and the LARRY_barcodes together to measure the umi expression
 CB_LARRY_group = defaultdict(list)
 for read in CB_UMI_group_filtered:
@@ -272,6 +279,13 @@ plt.savefig("${meta.id}_" + str(cutoff) + "_mean_shifted_count_data.png")
 
 #Remove LARRY barcodes that are below the treshhold.
 cb_larry_counts_filtered = [el for el in cb_larry_counts if el.count >= cutoff]
+
+n_step4_umi_groups = len([el for el in cb_larry_counts if el.count < cutoff])
+cells_with_passing = set(el.cell_barcode for el in cb_larry_counts if el.count >= cutoff)
+step4_excluded = pd.DataFrame([
+    {"step": "low_UMI_count", "cell_barcode": el.cell_barcode}
+    for el in cb_larry_counts if el.count < cutoff and el.cell_barcode not in cells_with_passing
+]).drop_duplicates()
 
 #Filter based on minimum larry umi parameter
 cell_filtered_df = pd.DataFrame(cb_larry_counts_filtered)
@@ -405,6 +419,11 @@ def cluster_merge(dataset , cutoff_value = 0.5) :
 
 clone_group_merged = cluster_merge(clonal_group_info_1 , cutoff_value = float(${params.jaccard_cutoff}))
 
+step5_excluded = pd.DataFrame({
+    "step": "ambiguous_clone_assignment",
+    "cell_barcode": list(set(clonal_group_info_1["cell_id"]) - set(clone_group_merged["Cell"]))
+})
+
 clone_group_merged["Cell_Count"] = [(cell , count) for cell, count in zip(clone_group_merged["Cell"] , clone_group_merged["Count"])]
 
 clone_group_merged_list = [sorted(list(values["Cell_Count"])) for _ , values in clone_group_merged.groupby("Clone")]
@@ -416,3 +435,60 @@ output_name_jaccard = "${meta.id}_" + str(cutoff) + "_clone_output.csv"
 
 #Write out the dataframe
 clone_group_merged_df.to_csv(output_name_jaccard, index = False)
+
+#QC exclusion outputs
+
+# Load filtered CellRanger barcodes (~real cells only)
+import gzip
+real_cells = set()
+for bc_file in "${filtered_barcodes}".split():
+    with gzip.open(bc_file, "rt") as f:
+        for line in f:
+            bc = line.strip()
+            if bc:
+                real_cells.add(bc.split('-')[0])
+
+# Fix step5 format: it stores cell_id (sample_id.barcode) instead of raw barcode
+if not step5_excluded.empty:
+    step5_excluded["cell_barcode"] = step5_excluded["cell_barcode"].str.split(".").str[-1]
+
+qc_excluded = pd.concat([step3_excluded, step4_excluded, step5_excluded], ignore_index=True)
+qc_excluded.insert(0, "sample_id", "${meta.id}")
+
+# Keep only exclusions for real CellRanger-called cells
+qc_excluded = qc_excluded[qc_excluded["cell_barcode"].isin(real_cells)]
+
+# Remove cells that got a valid clone assignment — they are not truly excluded
+clone_barcodes = set(cell.split('.')[-1] for cell in clone_group_merged_df['Cell'])
+qc_excluded = qc_excluded[~qc_excluded["cell_barcode"].isin(clone_barcodes)]
+
+# Make step3 mutually exclusive: remove cells also caught by step4 or step5
+step4_step5_cells = set(
+    qc_excluded.loc[qc_excluded["step"].isin(["low_UMI_count", "ambiguous_clone_assignment"]), "cell_barcode"])
+qc_excluded = qc_excluded[~((qc_excluded["step"] == "ambiguous_LARRY_barcode") &
+                             (qc_excluded["cell_barcode"].isin(step4_step5_cells)))]
+
+# Per-step cell counts (mutually exclusive)
+qc_summary = qc_excluded.groupby(["sample_id", "step"])["cell_barcode"].nunique().reset_index()
+qc_summary.columns = ["sample_id", "step", "n_excluded_cell_barcodes"]
+
+# Add UMI group counts (pair/triplet-level, where applicable)
+umi_groups_map = {
+    "ambiguous_LARRY_barcode": n_step3_umi_groups,
+    "low_UMI_count":           n_step4_umi_groups,
+    "ambiguous_clone_assignment": None
+}
+qc_summary["n_umi_groups_removed"] = qc_summary["step"].map(umi_groups_map)
+
+# Add total excluded row
+total_row = pd.DataFrame([{
+    "sample_id": "${meta.id}",
+    "step": "total_excluded",
+    "n_excluded_cell_barcodes": qc_excluded["cell_barcode"].nunique(),
+    "n_umi_groups_removed": None
+}])
+qc_summary = pd.concat([qc_summary, total_row], ignore_index=True)
+qc_summary = qc_summary[["sample_id", "step", "n_umi_groups_removed", "n_excluded_cell_barcodes"]]
+
+qc_excluded.to_csv("${meta.id}_" + str(cutoff) + "_qc_exclusions.csv", index=False)
+qc_summary.to_csv("${meta.id}_" + str(cutoff) + "_qc_summary.csv", index=False)

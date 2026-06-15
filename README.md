@@ -27,7 +27,7 @@
 11. Filter LARRY and CULLUMI reads based on length (GEX + LARRY) ([`cutadapt`](https://nf-co.re/modules/cutadapt/))
 12. Obtain cell barcodes from Cellranger that make the treshold (GEX) ([`gunzip`](https://nf-co.re/modules/gunzip/)) ([`cat_cat`](https://nf-co.re/modules/cat_cat/))
 13. Extract UMI barcode from a read and add it to the read name (GEX + LARRY) ([`umitools_extract`](https://nf-co.re/modules/umitools_extract/))
-14. Run bespoke script to obtain the LARRY label counts, determine cutoff and combine clone ids with multiple LARRY labels.
+14. Run bespoke script to obtain the LARRY label counts, determine cutoff and combine clone ids with multiple LARRY labels. For each sample, outputs the clone assignment table, a QC exclusion table (one row per excluded cell with reason), and a QC summary table (mutually exclusive cell counts per filtering step).
 
 ## Usage
 
@@ -69,8 +69,12 @@ Being in the nextflow pipeline directory, run the pipeline like this:
 nextflow main.nf \
    --input <SAMPLESHEET> \
    --outdir <OUTDIR> \
-   --cellranger_reference <CELLRANGER REFERENCE (absolute path)>
+   --cellranger_reference <CELLRANGER REFERENCE (absolute path)> \
+   -w <SCRATCH WORK DIR> \
+   -resume
 ```
+
+`-w` sets the directory where Nextflow writes intermediate files (recommended: a scratch area). `-resume` allows restarting from the last successful step if the run fails.
 
 ## Parameters
 
@@ -84,20 +88,20 @@ These parameters can be set in the nextflow.config file
 
 ## Pipeline output
 
-For every sample there is a output for the GEX and LARRY library, if both were available.
-Every library has two files:
+For every sample there is an output for the GEX and LARRY library, if both were available.
+Every library has four files:
 
-1. CSV file:
-    3 columns:
-    - Clone: Name of the clone that the cell belong to.
+1. `*_clone_output.csv` — clone assignment table, 3 columns:
+    - Clone: Name of the clone that the cell belongs to.
     - Cell: Name of the cell.
     - Count: Number of LARRY reads counted within the cell.
-2. PNG file:
-    Figure that depicts the LARRY signal cutoff.
-    - X axis: displays number of reads for particular LARRY label within particular cell.
-    - Y axis: frequency of occurance of that particular read count (log scale).
-    - Red line: The lowest counts are stepwise removed and shifted (-1). The mean is calculated and displayed by the red lige. When the red line stabilises (slope flattens) the cutoff is set. This parameter (epsilon) can be controlled in the nextflow.config file.
-    - Blue vertical line: signal cutoff. From this point onwards LARRY signals are considered, signals with a lower count are not considered (The minimum count is also in the output file names).
+2. `*.png` — figure depicting the LARRY signal cutoff.
+    - X axis: number of reads for a particular LARRY label within a particular cell.
+    - Y axis: frequency of occurrence of that particular read count (log scale).
+    - Red line: the mean count after stepwise removal and shift of the lowest counts. When the slope flattens the cutoff is set (controlled by the `epsilon` parameter).
+    - Blue vertical line: signal cutoff. LARRY signals below this count are not considered.
+3. `*_qc_exclusions.csv` — one row per excluded cell barcode, with columns `sample_id`, `step`, and `cell_barcode`. Steps are: `ambiguous_LARRY_barcode`, `low_UMI_count`, `ambiguous_clone_assignment`.
+4. `*_qc_summary.csv` — one row per filtering step, with columns `sample_id`, `step`, `n_umi_groups_removed`, and `n_excluded_cell_barcodes`. Counts are mutually exclusive across steps and restricted to CellRanger-called cells. A `total_excluded` row is included.
 
 ## Credits
 
