@@ -135,11 +135,13 @@ We thank the following people for their extensive assistance in the development 
 
 ## Test
 
-This test data is not in the github repository yet!
+Small test FASTQs (10,000 reads, human dataset) and a samplesheet are provided in `data/fastq/` and `input/test/`. You must supply your own CellRanger reference.
 
-To test if the complete pipeline runs succesfully.
-Run in the nextflow pipeline directory:
+To test the pipeline, run from the repository directory:
 
 ```bash
-nf-test test tests/main.nf.test
-```
+nextflow main.nf \
+    -profile test \
+    --cellranger_reference /path/to/your/cellranger_reference \
+    --outdir output/test \
+    -w /path/to/scratch/work
