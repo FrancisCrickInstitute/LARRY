@@ -76,6 +76,27 @@ nextflow main.nf \
 
 `-w` sets the directory where Nextflow writes intermediate files (recommended: a scratch area). `-resume` allows restarting from the last successful step if the run fails.
 
+## System requirements
+
+### Software dependencies
+
+| Software | Version tested |
+|---|---|
+| Nextflow | 25.04.4 |
+| Singularity | 3.11.3 |
+| CellRanger | 8.0.0 (via Singularity container) |
+
+All other dependencies (samtools, cutadapt, umi-tools, etc.) are pulled automatically as Singularity containers by the pipeline.
+
+### Operating system
+
+Tested on Rocky Linux 8.7 (Green Obsidian). Requires a SLURM-based HPC environment — this pipeline is not designed to run on a standard desktop.
+
+### Non-standard hardware
+
+- A SLURM HPC cluster with Singularity support
+- A scratch/work directory with sufficient storage for intermediate files
+
 ## Parameters
 
 These parameters can be set in the nextflow.config file
